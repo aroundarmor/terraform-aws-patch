@@ -51,6 +51,11 @@ jobs:
       - name: List files in root directory
         run: ls -l
 
+      # Go back one directory
+      - name: Present working directory
+        run: |
+          cd ..; pwd
+
       # Append region and account ID to backend.tf
       - name: Update Backend Configuration
         run: |
