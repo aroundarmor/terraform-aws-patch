@@ -1,3 +1,6 @@
+Sure, here's the script with the IAM role assumption part commented out:
+
+```yaml
 name: 'Terraform'
 
 on:
@@ -33,18 +36,18 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       # Assume IAM Role in AccountB
-      - name: Assume IAM Role in AccountB
-        run: |
-          # Set the role ARN in AccountB
-          ROLE_ARN="arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation"
-
-          # Assume the IAM role in AccountB using the AWS CLI
-          TEMP_ROLE=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name GitHubActions)
-
-          # Extract and export the temporary security credentials as environment variables
-          export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
-          export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
-          export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
+      #- name: Assume IAM Role in AccountB
+      #  run: |
+      #    # Set the role ARN in AccountB
+      #    ROLE_ARN="arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation"
+      #
+      #    # Assume the IAM role in AccountB using the AWS CLI
+      #    TEMP_ROLE=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name GitHubActions)
+      #
+      #    # Extract and export the temporary security credentials as environment variables
+      #    export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
+      #    export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
+      #    export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
 
   create-s3-bucket:
     name: 'Create S3 Bucket'
@@ -102,3 +105,6 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve tfplan
+```
+
+This version of the script does not include the IAM role assumption part.
