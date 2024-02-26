@@ -43,6 +43,14 @@ jobs:
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
           fi
 
+      # Check the current working directory
+      - name: Check current directory
+        run: pwd
+
+      # List files in the root directory to verify the presence of backend.tf
+      - name: List files in root directory
+        run: ls -l
+
       # Append region and account ID to backend.tf
       - name: Update Backend Configuration
         run: |
