@@ -32,19 +32,16 @@ jobs:
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # Assume IAM Role in AccountB
-      - name: Assume IAM Role in AccountB
+      # Check if S3 Bucket exists and create if not
+      - name: Check S3 Bucket Existence
         run: |
-          # Set the role ARN in AccountB
-          ROLE_ARN="arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/ROLE_IN_ACCOUNT_B"
-
-          # Assume the IAM role in AccountB using the AWS CLI
-          TEMP_ROLE=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name GitHubActions)
-
-          # Extract and export the temporary security credentials as environment variables
-          export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
-          export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
-          export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
+          if aws s3api head-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
+            echo "Bucket already exists."
+          else
+            echo "Bucket does not exist. Creating..."
+            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
+            aws s3api wait bucket-exists --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}
+          fi
 
   terraform:
     name: 'Terraform'
