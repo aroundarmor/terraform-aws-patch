@@ -43,6 +43,10 @@ jobs:
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
           fi
 
+      # Checkout to repository 
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
       # Check the current working directory
       - name: Check current directory
         run: pwd
@@ -51,11 +55,11 @@ jobs:
       - name: List files in root directory
         run: ls -l
 
-      # Go back one directory
-      - name: Present working directory
-        run: |
-          cd ; pwd
-          ls -l
+      # # Go back one directory
+      # - name: Present working directory
+      #   run: |
+      #     cd ; pwd
+      #     ls -l
 
       # Append region and account ID to backend.tf
       - name: Update Backend Configuration
