@@ -20,6 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Install AWS CLI
+    - name: Install AWS CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+
     # Check if S3 Bucket exists
     - name: Check S3 Bucket Existence
       run: |
@@ -36,11 +42,6 @@ jobs:
       run: |
         sed -i 's/REPLACE_REGION/${{ github.event.inputs.aws-region }}/g' backend.tf
         sed -i 's/REPLACE_ACCOUNT_ID/${{ github.event.inputs.aws-account-id }}/g' backend.tf
-
-    - name: Install AWS CLI
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y awscli
 
   terraform:
     name: 'Terraform'
