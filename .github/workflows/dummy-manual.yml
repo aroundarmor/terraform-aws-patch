@@ -47,7 +47,7 @@ jobs:
             echo "Bucket already exists."
           else
             echo "Bucket does not exist. Creating..."
-            aws s3 mb s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
+            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
           fi
 
       # Write AWS region and account ID to backend.tf
