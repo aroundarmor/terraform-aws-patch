@@ -45,7 +45,7 @@ jobs:
 
       # Check the current working directory
       - name: Check current directory
-        run: pwd
+        run: cd..; pwd
 
       # List files in the root directory to verify the presence of backend.tf
       - name: List files in root directory
@@ -54,7 +54,7 @@ jobs:
       # Go back one directory
       - name: Present working directory
         run: |
-          cd ..; pwd
+          cd ..; pwd; ls -l
 
       # Append region and account ID to backend.tf
       - name: Update Backend Configuration
