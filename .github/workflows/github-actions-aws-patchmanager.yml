@@ -26,6 +26,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y awscli
 
+    # Assume IAM Role
+    - name: Assume IAM Role
+      run: |
+        ROLE_ARN="arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation"
+        TEMP_ROLE=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name GitHubActions)
+        export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
+
     # Check if S3 Bucket exists
     - name: Check S3 Bucket Existence
       run: |
@@ -59,15 +68,6 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v3
-
-    # Assume IAM Role
-    - name: Assume IAM Role
-      run: |
-        ROLE_ARN="arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation"
-        TEMP_ROLE=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name GitHubActions)
-        export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
-        export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
-        export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
 
     # Set AWS region
     - name: Set AWS Region
