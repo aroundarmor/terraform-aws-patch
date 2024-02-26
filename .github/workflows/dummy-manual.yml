@@ -43,11 +43,17 @@ jobs:
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
           fi
 
-      # Write AWS region and account ID to backend.tf
-      - name: Write AWS region and account ID to backend.tf
+      # Append region and account ID to backend.tf
+      - name: Update Backend Configuration
         run: |
-          sed -i 's/REPLACE_REGION/${{ github.event.inputs.aws-region }}/g' backend.tf
-          sed -i 's/REPLACE_ACCOUNT_ID/${{ github.event.inputs.aws-account-id }}/g' backend.tf
+          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${{ github.event.inputs.aws-region }}\"/" backend.tf
+
+      # # Write AWS region and account ID to backend.tf
+      # - name: Write AWS region and account ID to backend.tf
+      #   run: |
+      #     sed -i 's/REPLACE_REGION/${{ github.event.inputs.aws-region }}/g' backend.tf
+      #     sed -i 's/REPLACE_ACCOUNT_ID/${{ github.event.inputs.aws-account-id }}/g' backend.tf
 
   terraform:
     name: 'Terraform'
