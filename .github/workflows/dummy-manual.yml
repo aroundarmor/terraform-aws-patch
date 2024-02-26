@@ -14,102 +14,67 @@ on:
 permissions:
   contents: read
 
+env:
+  AWS_ACCOUNT_ID: ${{ github.event.inputs.aws-account-id }}
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
+
 jobs:
   install-aws-cli:
     name: 'Install AWS CLI'
     runs-on: ubuntu-latest
 
     steps:
-      # Install AWS CLI
       - name: Install AWS CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli
 
-      # Set up AWS CLI with repository secrets of AccountA
       - name: Configure AWS CLI
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # Create S3 bucket if it doesn't exist
       - name: Create or Check S3 Bucket Existence
         run: |
-          # Check if the S3 bucket exists
-          if aws s3 ls s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
+          if aws s3 ls s3://ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID} 2>/dev/null; then
             echo "Bucket already exists."
           else
             echo "Bucket does not exist. Creating..."
-            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
+            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID} --region ${AWS_REGION}
           fi
-
-      # # Checkout to repository 
-      # - name: Checkout Repository
-      #   uses: actions/checkout@v2
-
-      # # Check the current working directory
-      # - name: Check current directory
-      #   run: pwd
-
-      # # List files in the root directory to verify the presence of backend.tf
-      # - name: List files in root directory
-      #   run: ls -l
-
-      # # # Go back one directory
-      # # - name: Present working directory
-      # #   run: |
-      # #     cd ; pwd
-      # #     ls -l
-
-
-
-      # # # Write AWS region and account ID to backend.tf
-      # # - name: Write AWS region and account ID to backend.tf
-      # #   run: |
-      # #     sed -i 's/REPLACE_REGION/${{ github.event.inputs.aws-region }}/g' backend.tf
-      # #     sed -i 's/REPLACE_ACCOUNT_ID/${{ github.event.inputs.aws-account-id }}/g' backend.tf
 
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
     environment: production
 
-    needs: install-aws-cli  # Ensure that the install-aws-cli job is completed before starting this job
+    needs: install-aws-cli
 
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
         shell: bash
 
     steps:
-      # Checkout the repository to the GitHub Actions runner
       - name: Checkout
         uses: actions/checkout@v3
 
-      # Append region and account ID to backend.tf
       - name: Update Backend Configuration
         run: |
-          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}\"/" backend.tf
-          sed -i "s/^ *region *=.*/region = \"${{ github.event.inputs.aws-region }}\"/" backend.tf
+          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
 
-      # Set AWS region
       - name: Set AWS Region
-        run: aws configure set region ${{ github.event.inputs.aws-region }}
+        run: aws configure set region ${AWS_REGION}
 
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
         run: terraform init
 
-      # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
         run: terraform fmt -check
 
-      # Generates an execution plan for Terraform
       - name: Terraform Plan
         run: terraform plan -input=false
 
-      # On push to "main", build or change infrastructure according to Terraform configuration files
-      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve tfplan
