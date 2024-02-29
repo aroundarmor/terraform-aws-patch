@@ -199,3 +199,8 @@ variable "patch_group" {
   description = "The patch group for the patch baseline."
   type        = string
 }
+
+variable "account_id" {
+  description = "The AWS account ID."
+  type        = string
+}
