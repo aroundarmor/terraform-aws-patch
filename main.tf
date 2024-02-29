@@ -1,56 +1,60 @@
-resource "aws_ssm_maintenance_window" "production" {
-  name                       = var.maintenance_window_name
-  schedule                   = var.schedule_expression
-  duration                   = var.duration_hours
-  cutoff                     = var.cutoff_hours
-  allow_unassociated_targets = true
-  schedule_timezone          = "UTC"
-  schedule_offset            = "+0000"
-  start_date                 = var.start_date
-  end_date                   = var.end_date
+# Maintenance Window
+resource "aws_ssm_maintenance_window" "example" {
+  name                        = var.name
+  schedule                    = var.schedule
+  cutoff                      = var.cutoff
+  duration                    = var.duration
+  description                 = var.description
+  allow_unassociated_targets  = var.allow_unassociated_targets
+  enabled                     = var.enabled
+  end_date                    = var.end_date
+  schedule_timezone           = var.schedule_timezone
+  schedule_offset             = var.schedule_offset
+  start_date                  = var.start_date
 }
 
-resource "aws_ssm_maintenance_window_target" "example_target" {
-  window_id     = aws_ssm_maintenance_window.production.id
-  resource_type = "INSTANCE"
-
-  dynamic "targets" {
-    for_each = var.target_tags
-    content {
-      key    = "tag:${targets.key}"
-      values = [targets.value]
-    }
-  }
+# Maintenance Window Target
+resource "aws_ssm_maintenance_window_target" "example" {
+  window_id     = aws_ssm_maintenance_window.example.id
+  name          = var.name
+  description   = var.description
+  resource_type = var.resource_type
+  targets       = var.targets
 }
 
+# Maintenance Window Task
 resource "aws_ssm_maintenance_window_task" "example_task" {
-  window_id        = aws_ssm_maintenance_window.production.id
-  task_type        = "RUN_COMMAND"
-  task_arn         = "AWS-RunPatchBaseline"  # Patch Manager document ARN for patching
-  priority         = 1  # Priority of the task
-  max_concurrency  = 1  # Maximum number of targets that can run the task concurrently
-  max_errors       = 1  # Maximum number of errors allowed before the task stops being executed
-  service_role_arn = "arn:aws:iam::123456789012:role/service-role/AWS-SystemsManager-ServiceRole"
-
-  task_invocation_parameters {
-    run_command_parameters {
-      document_version = "$LATEST"
-      timeout_seconds  = 600  # Timeout for the patching command execution
-    }
-  }
+  window_id              = aws_ssm_maintenance_window.example.id
+  max_concurrency        = var.max_concurrency
+  max_errors             = var.max_errors
+  cutoff_behavior        = var.cutoff_behavior
+  task_type              = var.task_type
+  task_arn               = var.task_arn
+  service_role_arn       = var.service_role_arn
+  name                   = var.name
+  description            = var.description
+  priority               = var.priority
+  targets                = var.targets
+  task_invocation_parameters = var.task_invocation_parameters
 }
 
-resource "aws_ssm_patch_baseline" "example_baseline" {
-  name             = var.patch_baseline_name
-  operating_system = "WINDOWS"
-  
-  approval_rule {
-    approve_after_days = var.approval_rule["approve_after_days"]
-    compliance_level   = var.approval_rule["compliance_level"]
-  }
+# Patch Baseline
+resource "aws_ssm_patch_baseline" "example" {
+  name                              = var.name
+  description                       = var.description
+  operating_system                  = var.operating_system
+  approval_rule                     = var.approval_rule
+  approved_patches_compliance_level = var.approved_patches_compliance_level
+  approved_patches_enable_non_security = var.approved_patches_enable_non_security
+  approved_patches                  = var.approved_patches
+  global_filter                     = var.global_filter
+  rejected_patches_action           = var.rejected_patches_action
+  rejected_patches                  = var.rejected_patches
+  source                            = var.source
 }
 
-resource "aws_ssm_patch_group" "example_patch_group" {
-  baseline_id = aws_ssm_patch_baseline.example_baseline.id
-  patch_group = var.patch_group_name
+# Patch Group
+resource "patch_group" "example" {
+  baseline_id = aws_ssm_patch_baseline.example.id
+  patch_group = var.patch_group
 }
