@@ -1,206 +1,285 @@
-variable "name" {
-  description = "The name of the maintenance window or patch baseline."
+
+#common variables
+variable "account_id" {
+  description = "AWS account ID"
+  type = number
+}
+
+variable "region" {
+  description = "AWS region"
+  type = string
+}
+
+variable "adjusted_cron_expression" {
+  default = local.adjusted_cron_expression
+}
+
+####################################################################
+####################################################################
+#variables for sns
+variable "email_notification" {
+  description = "Email address for notifications"
   type        = string
+  default = ""
+}
+
+####################################################################
+####################################################################
+#variable for maintenance window
+variable "mw_name" {
+  type        = string
+  description = "The name of the maintenance window."
 }
 
 variable "schedule" {
-  description = "The schedule of the maintenance window, in cron or rate format."
   type        = string
+  description = "The schedule of the Maintenance Window in the form of a cron or rate expression."
 }
 
 variable "cutoff" {
-  description = "The number of hours before the end of the maintenance window that Systems Manager stops scheduling new tasks for execution."
-  type        = string
+  type        = number
+  description = "The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution."
+  default = null
 }
 
 variable "duration" {
-  description = "The duration of the maintenance window in hours."
-  type        = string
+  type        = number
+  description = "The duration of the Maintenance Window in hours."
+  default = 4
 }
 
 variable "description" {
-  description = "The description of the maintenance window or patch baseline."
   type        = string
+  description = "A description for the maintenance window."
+  default     = ""
 }
 
 variable "allow_unassociated_targets" {
-  description = "Whether to allow unassociated targets in the maintenance window."
   type        = bool
+  description = "Whether targets must be registered with the Maintenance Window before tasks can be defined for those targets."
+  default     = false
 }
 
 variable "enabled" {
-  description = "Whether the maintenance window is enabled."
   type        = bool
+  description = "Whether the maintenance window is enabled. Default: true."
+  default     = true
 }
 
 variable "end_date" {
-  description = "The end date of the maintenance window."
   type        = string
+  description = "Timestamp in ISO-8601 extended format when to no longer run the maintenance window."
+  default     = null
 }
 
 variable "schedule_timezone" {
-  description = "The timezone for the maintenance window schedule."
   type        = string
+  description = "Timezone for schedule in Internet Assigned Numbers Authority (IANA) Time Zone Database format."
+  default     = null
 }
 
 variable "schedule_offset" {
-  description = "The number of days to wait to run maintenance window tasks after the schedule cron expression date."
-  type        = string
+  type        = number
+  description = "The number of days to wait after the date and time specified by a CRON expression before running the maintenance window."
+  default     = null
 }
 
 variable "start_date" {
-  description = "The start date of the maintenance window."
   type        = string
+  description = "Timestamp in ISO-8601 extended format when to begin the maintenance window."
+  default     = null
 }
 
-variable "window_id" {
-  description = "The ID of the maintenance window."
-  type        = string
-}
+
+####################################################################
+####################################################################
+#variables for maitenance window target
 
 variable "resource_type" {
-  description = "The type of the target resource for the maintenance window."
   type        = string
+  description = "The type of target being registered with the Maintenance Window. Possible values are INSTANCE and RESOURCE_GROUP."
+  default = "INSTANCE"
 }
 
-variable "targets" {
-  description = "The list of targets for the maintenance window."
-  type        = list(string)
+variable "patch_group_tag" {
+  type = string
+  description = "This value will be parsed to targets tag"
+  default = "PatchGroup"
 }
+
+variable "patch_group_tag_value" {
+  type = list(string)
+  description = "This value will be parsed to targets tag value"
+  default = [ "Linux" ]
+}
+
+####################################################################
+####################################################################
+# variables for maitenance window tasks
 
 variable "max_concurrency" {
-  description = "The maximum number of tasks allowed to run concurrently during the maintenance window."
-  type        = string
+  description = "The maximum number of targets this task can be run for in parallel."
+  type        = number
+  default     = 3
 }
 
 variable "max_errors" {
-  description = "The maximum number of errors allowed before the task stops being scheduled."
-  type        = string
+  description = "The maximum number of errors allowed before this task stops being scheduled."
+  type        = number
+  default     = 3
 }
 
 variable "cutoff_behavior" {
-  description = "The behavior of the maintenance window when tasks exceed the cutoff time."
+  description = "Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached."
+  #Valid values are CONTINUE_TASK and CANCEL_TASK.
   type        = string
+  default     = "CANCEL_TASK"
 }
 
 variable "task_type" {
-  description = "The type of task to run in the maintenance window."
+  description = "The type of task being registered."
   type        = string
+  default = "RUN_COMMAND"
+  # Add any validation rules if necessary
 }
 
 variable "task_arn" {
-  description = "The ARN of the task to run in the maintenance window."
+  description = "The ARN of the task to execute."
   type        = string
+  default = "AWS-RunPatchBaseline"
+  # Add any validation rules if necessary
 }
 
 variable "service_role_arn" {
-  description = "The ARN of the service role for Systems Manager to assume when running maintenance window tasks."
+  description = "The role that should be assumed when executing the task."
   type        = string
+  default     = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
 }
 
 variable "priority" {
-  description = "The priority of the maintenance window task in relation to other tasks in the window."
-  type        = string
+  description = "The priority of the task in the Maintenance Window, the lower the number the higher the priority."
+  type        = number
+  default     = 1
 }
 
-variable "task_invocation_parameters" {
-  description = "The parameters for task invocation in the maintenance window."
-  type = object({
-    automation_parameters = object({
-      document_version = string
-      parameter        = map(string)
-    })
-    lambda_parameters = object({
-      client_context = string
-      payload        = string
-      qualifier      = string
-    })
-    run_command_parameters = object({
-      comment           = string
-      document_hash     = string
-      document_hash_type= string
-      notification_config = object({
-        notification_arn    = string
-        notification_events = list(string)
-        notification_type   = string
-      })
-      output_s3_bucket     = string
-      output_s3_key_prefix = string
-      service_role_arn     = string
-      timeout_seconds      = number
-      cloudwatch_config = object({
-        cloudwatch_log_group_name = string
-        cloudwatch_output_enabled = bool
-      })
-    })
-    step_functions_parameters = object({
-      input = string
-      name  = string
-    })
-  })
+variable "operation" {
+  description = "This is used to configure type of operation to perform"
+  # Possible values can be Scan/Install
+  type = list(string)
+  default = ["Scan"]
 }
 
+variable "reboot_option" {
+  description = "this is used to set reboot options in maitenance window task"
+  # Possible values RebootIfNeeded | NoReboot
+  type = list(string)
+  default = [ "NoReboot" ]
+}
+
+variable "cloudwatch_output_enabled" {
+  description = "Enables Systems Manager to send command output to CloudWatch Logs"
+  type = bool
+  default = true
+}
+
+variable "notification_events" {
+  description = "The different events for which you can receive notifications"
+  # Valid values: All, InProgress, Success, TimedOut, Cancelled, and Failed
+  type = string
+  default = "All"
+}
+
+####################################################################
+####################################################################
+# variables for patch baseline
 variable "operating_system" {
-  description = "The operating system for the patch baseline."
-  type        = string
-}
-
-variable "approval_rule" {
-  description = "The rule used to approve patches for the patch baseline."
-  type        = list(string)
-}
-
-variable "approved_patches_compliance_level" {
-  description = "The compliance level for approved patches in the patch baseline."
-  type        = string
-}
-
-variable "approved_patches_enable_non_security" {
-  description = "Whether non-security patches are included in the list of approved patches for the patch baseline."
-  type        = bool
+  description = "Operating system the patch baseline applies to."
+  type = string
+  #Valid values are ALMA_LINUX, AMAZON_LINUX, AMAZON_LINUX_2, AMAZON_LINUX_2022, AMAZON_LINUX_2023, CENTOS, DEBIAN, MACOS, ORACLE_LINUX, RASPBIAN, REDHAT_ENTERPRISE_LINUX, ROCKY_LINUX, SUSE, UBUNTU, and WINDOWS
+  default     = "WINDOWS"
 }
 
 variable "approved_patches" {
-  description = "The list of approved patches for the patch baseline."
+  description = "List of explicitly approved patches for the baseline."
   type        = list(string)
-}
-
-variable "global_filter" {
-  description = "The global filter for the patch baseline."
-  type = object({
-    patch_filters = list(object({
-      key   = string
-      values = list(string)
-    }))
-  })
+  default     = []
 }
 
 variable "rejected_patches_action" {
-  description = "The action for rejected patches in the patch baseline."
-  type        = string
+  description = "Action for Patch Manager to take on patches included in the rejected_patches list."
+  # Valid values are ALLOW_AS_DEPENDENCY and BLOCK.
+  default     = "BLOCK"
 }
 
 variable "rejected_patches" {
-  description = "The list of rejected patches for the patch baseline."
+  description = "List of rejected patches."
   type        = list(string)
+  default     = []
 }
 
-variable "source" {
-  description = "The source for the patch baseline."
-  type        = string
+variable "approve_after_days" {
+  description = "Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline"
+  #Valid Range: 0 to 100.
+  #Conflicts with approve_until_date
+  type = optional(number)
 }
 
-variable "baseline_id" {
-  description = "The ID of the patch baseline."
-  type        = string
+variable "approve_until_date" {
+  description = "Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically"
+  #Date is formatted as YYYY-MM-DD
+  #Conflicts with approve_after_days
+  type = optional(string)
 }
 
-variable "patch_group" {
-  description = "The patch group for the patch baseline."
-  type        = string
+variable "compliance_level" {
+  description = "Compliance level for patches approved by this rule"
+  #Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED
+  type = optional(string)
+  default = "UNSPECIFIED"
 }
 
-variable "account_id" {
-  description = "The AWS account ID."
-  type        = string
+variable "enable_non_security" {
+  description = "Boolean enabling the application of non-security updates"
+  #Valid for Linux instances only.
+  type = bool
+  default = false
 }
+
+variable "patch_filter_product" {
+  description = "This value will add the product in patch filter"
+  type = list(string)
+  default = null
+}
+
+variable "patch_filter_classification" {
+  description = "This value will add the classification in every patch filter except ubuntu/debian"
+  type = list(string)
+  default = [ "*" ]
+}
+
+variable "patch_filter_priority" {
+  description = "This value will add the priority in ubuntu/debian patch filter"
+  type = list(string)
+  default = null
+}
+
+variable "patch_filter_severity" {
+  description = "This value will add the product in every patch filter except ubuntu/debian/macos/windows"
+  type = list(string)
+  default = null
+}
+
+variable "patch_filter_product_family" {
+  description = "This value will add the product in windows patch filter"
+  type = list(string)
+  default = null
+}
+
+variable "patch_filter_msrc_severity" {
+  description = "This value will add the product in windows patch filter"
+  type = list(string)
+  default = null
+}
+
+####################################################################
+####################################################################
