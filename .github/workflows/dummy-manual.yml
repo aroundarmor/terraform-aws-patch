@@ -52,7 +52,7 @@ jobs:
         with:
           audience: sts.amazonaws.com
           aws-region: us-east-1
-          role-to-assume: arn:aws:iam::211125340848:role/OllionPatchingAutomation
+          role-to-assume: arn:aws:iam::$(AWS_ACCOUNT_ID):role/OllionPatchingAutomation
       
       # - name: Echo secrets
       #   run: |
