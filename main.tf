@@ -185,7 +185,7 @@ resource "aws_ssm_patch_baseline" "example" {
 ####################################################################
 ####################################################################
 # Create patch group
-resource "patch_group" "example" {
+resource "aws_ssm_patch_group" "example" {
   baseline_id = aws_ssm_patch_baseline.example.id
   patch_group = var.patch_group_tag_value  # Using maintenance window name as patch group name, adjust if needed
 }
