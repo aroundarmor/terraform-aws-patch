@@ -10,9 +10,10 @@ variable "region" {
   type = string
 }
 
-variable "adjusted_cron_expression" {
-  default = local.adjusted_cron_expression
-}
+# variable "adjusted_cron_expression" {
+#   type = string
+#   default = local.adjusted_cron_expression
+# }
 
 ####################################################################
 ####################################################################
@@ -39,19 +40,13 @@ variable "schedule" {
 variable "cutoff" {
   type        = number
   description = "The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution."
-  default = null
+  default = 0
 }
 
 variable "duration" {
   type        = number
   description = "The duration of the Maintenance Window in hours."
   default = 4
-}
-
-variable "description" {
-  type        = string
-  description = "A description for the maintenance window."
-  default     = ""
 }
 
 variable "allow_unassociated_targets" {
@@ -66,16 +61,10 @@ variable "enabled" {
   default     = true
 }
 
-variable "end_date" {
-  type        = string
-  description = "Timestamp in ISO-8601 extended format when to no longer run the maintenance window."
-  default     = null
-}
-
 variable "schedule_timezone" {
   type        = string
   description = "Timezone for schedule in Internet Assigned Numbers Authority (IANA) Time Zone Database format."
-  default     = null
+  default     = "UTC"
 }
 
 variable "schedule_offset" {
@@ -90,7 +79,11 @@ variable "start_date" {
   default     = null
 }
 
-
+variable "end_date" {
+  type        = string
+  description = "Timestamp in ISO-8601 extended format when to no longer run the maintenance window."
+  default     = null
+}
 ####################################################################
 ####################################################################
 #variables for maitenance window target
@@ -110,7 +103,11 @@ variable "patch_group_tag" {
 variable "patch_group_tag_value" {
   type = list(string)
   description = "This value will be parsed to targets tag value"
-  default = [ "Linux" ]
+  default = [ "linux" ]
+  validation {
+    condition = length(var.patch_group_tag_value) > 0 && alltrue([for v in var.patch_group_tag_value : can(regex("^([a-z]+)$", v))])
+    error_message = "All values must be in lowercase"
+  }
 }
 
 ####################################################################
@@ -120,13 +117,13 @@ variable "patch_group_tag_value" {
 variable "max_concurrency" {
   description = "The maximum number of targets this task can be run for in parallel."
   type        = number
-  default     = 3
+  default     = 5
 }
 
 variable "max_errors" {
   description = "The maximum number of errors allowed before this task stops being scheduled."
   type        = number
-  default     = 3
+  default     = 5
 }
 
 variable "cutoff_behavior" {
@@ -150,11 +147,11 @@ variable "task_arn" {
   # Add any validation rules if necessary
 }
 
-variable "service_role_arn" {
-  description = "The role that should be assumed when executing the task."
-  type        = string
-  default     = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
-}
+# variable "service_role_arn" {
+#   description = "The role that should be assumed when executing the task."
+#   type        = string
+#   default     = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
+# }
 
 variable "priority" {
   description = "The priority of the task in the Maintenance Window, the lower the number the higher the priority."
@@ -221,20 +218,22 @@ variable "approve_after_days" {
   description = "Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline"
   #Valid Range: 0 to 100.
   #Conflicts with approve_until_date
-  type = optional(number)
+  type = number
+  default = 7
 }
 
 variable "approve_until_date" {
   description = "Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically"
   #Date is formatted as YYYY-MM-DD
   #Conflicts with approve_after_days
-  type = optional(string)
+  type = string
+  default = null
 }
 
 variable "compliance_level" {
   description = "Compliance level for patches approved by this rule"
   #Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED
-  type = optional(string)
+  type = string
   default = "UNSPECIFIED"
 }
 
@@ -248,7 +247,7 @@ variable "enable_non_security" {
 variable "patch_filter_product" {
   description = "This value will add the product in patch filter"
   type = list(string)
-  default = null
+  default = ["*"]
 }
 
 variable "patch_filter_classification" {
@@ -283,3 +282,19 @@ variable "patch_filter_msrc_severity" {
 
 ####################################################################
 ####################################################################
+# Create scheduler variables
+variable "start_instance" {
+  description = "Specifies whether the schedule is enabled or disabled."
+  # One of: ENABLED (default), DISABLED.
+  type = string
+  default = "ENABLED"
+}
+
+####################################################################
+####################################################################
+# Create variables for start lambda function
+variable "lambda_start_name" {
+  description = "This will reference the name of lambda that starts the stopped instances"
+  type = string
+  default = "ollion-start-function"
+}
