@@ -2,12 +2,12 @@
 #common variables
 variable "account_id" {
   description = "AWS account ID"
-  type = number
+  type        = number
 }
 
 variable "region" {
   description = "AWS region"
-  type = string
+  type        = string
 }
 
 # variable "adjusted_cron_expression" {
@@ -21,7 +21,7 @@ variable "region" {
 variable "email_notification" {
   description = "Email address for notifications"
   type        = string
-  default = ""
+  default     = ""
 }
 
 ####################################################################
@@ -40,13 +40,13 @@ variable "schedule" {
 variable "cutoff" {
   type        = number
   description = "The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution."
-  default = 0
+  default     = 0
 }
 
 variable "duration" {
   type        = number
   description = "The duration of the Maintenance Window in hours."
-  default = 4
+  default     = 4
 }
 
 variable "allow_unassociated_targets" {
@@ -91,24 +91,25 @@ variable "end_date" {
 variable "resource_type" {
   type        = string
   description = "The type of target being registered with the Maintenance Window. Possible values are INSTANCE and RESOURCE_GROUP."
-  default = "INSTANCE"
+  default     = "INSTANCE"
 }
 
 variable "patch_group_tag" {
-  type = string
+  type        = string
   description = "This value will be parsed to targets tag"
-  default = "PatchGroup"
+  default     = "PatchGroup"
 }
 
 variable "patch_group_tag_value" {
-  type = list(string)
+  type        = string
   description = "This value will be parsed to targets tag value"
-  default = [ "linux" ]
+  default     = "linux"
   validation {
-    condition = length(var.patch_group_tag_value) > 0 && alltrue([for v in var.patch_group_tag_value : can(regex("^([a-z]+)$", v))])
-    error_message = "All values must be in lowercase"
+    condition     = can(regex("^([a-z]+)$", var.patch_group_tag_value))
+    error_message = "The value must be in lowercase"
   }
 }
+
 
 ####################################################################
 ####################################################################
@@ -129,21 +130,21 @@ variable "max_errors" {
 variable "cutoff_behavior" {
   description = "Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached."
   #Valid values are CONTINUE_TASK and CANCEL_TASK.
-  type        = string
-  default     = "CANCEL_TASK"
+  type    = string
+  default = "CANCEL_TASK"
 }
 
 variable "task_type" {
   description = "The type of task being registered."
   type        = string
-  default = "RUN_COMMAND"
+  default     = "RUN_COMMAND"
   # Add any validation rules if necessary
 }
 
 variable "task_arn" {
   description = "The ARN of the task to execute."
   type        = string
-  default = "AWS-RunPatchBaseline"
+  default     = "AWS-RunPatchBaseline"
   # Add any validation rules if necessary
 }
 
@@ -162,27 +163,27 @@ variable "priority" {
 variable "operation" {
   description = "This is used to configure type of operation to perform"
   # Possible values can be Scan/Install
-  type = list(string)
+  type    = list(string)
   default = ["Scan"]
 }
 
 variable "reboot_option" {
   description = "this is used to set reboot options in maitenance window task"
   # Possible values RebootIfNeeded | NoReboot
-  type = list(string)
-  default = [ "NoReboot" ]
+  type    = list(string)
+  default = ["NoReboot"]
 }
 
 variable "cloudwatch_output_enabled" {
   description = "Enables Systems Manager to send command output to CloudWatch Logs"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "notification_events" {
   description = "The different events for which you can receive notifications"
   # Valid values: All, InProgress, Success, TimedOut, Cancelled, and Failed
-  type = string
+  type    = string
   default = "All"
 }
 
@@ -191,9 +192,9 @@ variable "notification_events" {
 # variables for patch baseline
 variable "operating_system" {
   description = "Operating system the patch baseline applies to."
-  type = string
+  type        = string
   #Valid values are ALMA_LINUX, AMAZON_LINUX, AMAZON_LINUX_2, AMAZON_LINUX_2022, AMAZON_LINUX_2023, CENTOS, DEBIAN, MACOS, ORACLE_LINUX, RASPBIAN, REDHAT_ENTERPRISE_LINUX, ROCKY_LINUX, SUSE, UBUNTU, and WINDOWS
-  default     = "WINDOWS"
+  default = "WINDOWS"
 }
 
 variable "approved_patches" {
@@ -205,7 +206,7 @@ variable "approved_patches" {
 variable "rejected_patches_action" {
   description = "Action for Patch Manager to take on patches included in the rejected_patches list."
   # Valid values are ALLOW_AS_DEPENDENCY and BLOCK.
-  default     = "BLOCK"
+  default = "BLOCK"
 }
 
 variable "rejected_patches" {
@@ -218,7 +219,7 @@ variable "approve_after_days" {
   description = "Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline"
   #Valid Range: 0 to 100.
   #Conflicts with approve_until_date
-  type = number
+  type    = number
   default = 7
 }
 
@@ -226,59 +227,72 @@ variable "approve_until_date" {
   description = "Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically"
   #Date is formatted as YYYY-MM-DD
   #Conflicts with approve_after_days
-  type = string
+  type    = string
   default = null
 }
 
 variable "compliance_level" {
   description = "Compliance level for patches approved by this rule"
   #Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED
-  type = string
+  type    = string
   default = "UNSPECIFIED"
 }
 
 variable "enable_non_security" {
   description = "Boolean enabling the application of non-security updates"
   #Valid for Linux instances only.
-  type = bool
+  type    = bool
   default = false
 }
 
-variable "patch_filter_product" {
-  description = "This value will add the product in patch filter"
-  type = list(string)
-  default = ["*"]
+
+variable "windows_patch_filter" {
+  description = "Patch filter for Windows operating system"
+  type        = map(list(string))
+  default = {
+    PRODUCT_FAMILY = ["WindowsServer2019", "WindowsServer2016"],
+    CLASSIFICATION = ["CriticalUpdates", "SecurityUpdates"],
+    MSRC_SEVERITY  = ["Critical", "Important"]
+  }
 }
 
-variable "patch_filter_classification" {
-  description = "This value will add the classification in every patch filter except ubuntu/debian"
-  type = list(string)
-  default = [ "*" ]
+variable "debian_patch_filter" {
+  description = "Patch filter for Debian operating system"
+  type        = map(list(string))
+  default = {
+    PRODUCT  = ["Debian"],
+    PRIORITY = ["high"]
+  }
 }
 
-variable "patch_filter_priority" {
-  description = "This value will add the priority in ubuntu/debian patch filter"
-  type = list(string)
-  default = null
+variable "ubuntu_patch_filter" {
+  description = "Patch filter for Ubuntu operating system"
+  type        = map(list(string))
+  default = {
+    PRODUCT  = ["Ubuntu"],
+    PRIORITY = ["high"]
+  }
 }
 
-variable "patch_filter_severity" {
-  description = "This value will add the product in every patch filter except ubuntu/debian/macos/windows"
-  type = list(string)
-  default = null
+variable "macos_patch_filter" {
+  description = "Patch filter for macOS operating system"
+  type        = map(list(string))
+  default = {
+    PRODUCT        = ["macOS"],
+    CLASSIFICATION = ["Critical", "Security"]
+  }
 }
 
-variable "patch_filter_product_family" {
-  description = "This value will add the product in windows patch filter"
-  type = list(string)
-  default = null
+variable "default_patch_filter" {
+  description = "Patch filter for other operating systems"
+  type        = map(list(string))
+  default = {
+    PRODUCT        = ["*"],
+    CLASSIFICATION = ["Security"]
+    SEVERITY       = ["Critical"]
+  }
 }
 
-variable "patch_filter_msrc_severity" {
-  description = "This value will add the product in windows patch filter"
-  type = list(string)
-  default = null
-}
 
 ####################################################################
 ####################################################################
@@ -286,7 +300,7 @@ variable "patch_filter_msrc_severity" {
 variable "start_instance" {
   description = "Specifies whether the schedule is enabled or disabled."
   # One of: ENABLED (default), DISABLED.
-  type = string
+  type    = string
   default = "ENABLED"
 }
 
@@ -295,6 +309,9 @@ variable "start_instance" {
 # Create variables for start lambda function
 variable "lambda_start_name" {
   description = "This will reference the name of lambda that starts the stopped instances"
-  type = string
-  default = "ollion-start-function"
+  type        = string
+  default     = "ollion-start-function"
 }
+
+# additional variable
+# variables.tf
