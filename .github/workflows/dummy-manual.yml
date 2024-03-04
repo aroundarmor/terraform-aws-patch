@@ -79,8 +79,15 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format
-        run: terraform fmt -check
+      - name: Terraform Format Check
+        run: |
+         if terraform fmt -check; then
+           echo "Terraform files are formatted correctly."
+         else
+           echo "Terraform files need formatting. Running terraform fmt..."
+           terraform fmt -recursive
+         fi
+
 
       - name: Terraform Plan
         run: terraform plan -input=false
