@@ -378,7 +378,7 @@ resource "aws_iam_role_policy_attachment" "scheduler_policy_attachment" {
 
 resource "aws_scheduler_schedule" "start" {
   state      = var.start_instance
-  name       = "ollion-start-${var.mw_name}"
+  name       = "ollion-start-${aws_ssm_maintenance_window.example.id}"
   group_name = "default"
 
   flexible_time_window {
