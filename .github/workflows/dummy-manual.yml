@@ -1,4 +1,4 @@
-name: 'Terraform'
+name: 'Terraform-PatchManager'
 
 on:
   workflow_dispatch:
@@ -68,10 +68,11 @@ jobs:
             echo "Bucket does not exist. Creating..."
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
           fi
-      - name: Update Backend Configuration
+      - name: Update Backend and Provider Configuration
         run: |
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
 
       - name: Set AWS Region
         run: aws configure set region ${AWS_REGION}
