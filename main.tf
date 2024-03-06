@@ -1,15 +1,44 @@
 module "patch_deployments" {
-  for_each                    = var.maintenance_window
-  source                      = "./modules/patch-deploy"
-  regions                     = each.value.region
-  patch_deployment_id         = each.value.patch_deployment_id
-  instance_filter_labels      = each.value.instance_filter_labels
-  maintenance_window_duration = each.value.maintenance_window_duration
-  reboot_config               = each.value.reboot_config
-  os_type                     = each.value.os_type
-  package_configurations      = each.value.package_configurations
-  pre_step                    = each.value.pre_step
-  post_step                   = each.value.post_step
-  schedule                    = each.value.schedule
-  rollout                     = try(each.value.rollout, null)
+  source = "./modules/patch-deploy"  # Replace <module_source> with the source of your module
+
+  for_each = var.maintenance_window
+
+  account_id                 = try(each.value.account_id, null)
+  region                     = try(each.value.region, null)
+  email_notification         = try(each.value.email_notification, null)
+  schedule                   = try(each.value.schedule, null)
+  # cutoff                     = try(each.value.cutoff, null)
+  duration                   = try(each.value.duration, null)
+  allow_unassociated_targets = try(each.value.allow_unassociated_targets, null)
+  enabled                    = try(each.value.enabled, null)
+  end_date                   = try(each.value.end_date, null)
+  schedule_timezone          = try(each.value.schedule_timezone, null)
+  schedule_offset            = try(each.value.schedule_offset, null)
+  start_date                 = try(each.value.start_date, null)
+  mw_name                    = try(each.value.mw_name, null)
+  # resource_type              = try(each.value.resource_type, null)
+  # patch_group_tag            = try(each.value.patch_group_tag, null)
+  patch_group_tag_value      = try(each.value.patch_group_tag_value, null)
+  # max_concurrency            = try(each.value.max_concurrency, null)
+  # max_errors                 = try(each.value.max_errors, null)
+  # cutoff_behavior            = try(each.value.cutoff_behavior, null)
+  # task_type                  = try(each.value.task_type, null)
+  # task_arn                   = try(each.value.task_arn, null)
+  operation                  = try(each.value.operation, null)
+  reboot_option              = try(each.value.reboot_option, null)
+  # priority                   = try(each.value.priority, null)
+  # cloudwatch_output_enabled  = try(each.value.cloudwatch_output_enabled, null)
+  operating_system           = try(each.value.operating_system, null)
+  approved_patches           = try(each.value.approved_patches, null)
+  # rejected_patches_action    = try(each.value.rejected_patches_action, null)
+  rejected_patches           = try(each.value.rejected_patches, null)
+  approve_after_days         = try(each.value.approve_after_days, null)
+  # approve_until_date         = try(each.value.approve_until_date, null)
+  compliance_level           = try(each.value.compliance_level, null)
+  enable_non_security        = try(each.value.enable_non_security, null)
+  windows_patch_filter       = try(each.value.windows_patch_filter, null)
+  debian_patch_filter        = try(each.value.debian_patch_filter, null)
+  macos_patch_filter         = try(each.value.macos_patch_filter, null)
+  default_patch_filter       = try(each.value.default_patch_filter, null)
+  start_instance             = try(each.value.start_instance, null)
 }
