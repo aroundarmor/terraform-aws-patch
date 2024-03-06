@@ -1,4 +1,4 @@
-name: 'Terraform'
+name: 'Terraform-PatchManager-Destroyer'
 
 on:
   workflow_dispatch:
@@ -10,7 +10,10 @@ on:
         description: 'AWS Region'
         required: false
         default: 'us-east-1'
-
+      csv-file-path:
+        description: 'Path of the desired .csv file under csv-files directory'
+        required: true
+        
 permissions:
   contents: read
   id-token: write
@@ -22,8 +25,8 @@ env:
   # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
-  install-aws-cli:
-    name: 'Install AWS CLI'
+  deploy-aws-patchmanger-destroyer-setup:
+    name: 'Deploy-AWS-PatchManager-Destroyer-Setup'
     runs-on: ubuntu-latest
 
     steps:
@@ -32,8 +35,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      # - name: Configure AWS CLI
+      #   run: |
+      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # - name: Assume IAM Role for another account
+      #   run: |
+      #     TEMP_ROLE=$(aws sts assume-role --role-arn arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation --role-session-name GitHubActions)
+      #     export AWS_ACCESS_KEY_ID=$(echo $TEMP_ROLE | jq -r '.Credentials.AccessKeyId')
+      #     export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
+      #     export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
+
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -41,6 +56,12 @@ jobs:
           audience: sts.amazonaws.com
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation
+      
+      # - name: Echo secrets
+      #   run: |
+      #     echo $AWS_ACCESS_KEY_ID
+      #     echo $AWS_SECRET_ACCESS_KEY
+      #     echo $AWS_SESSION_TOKEN
 
       - name: Create or Check S3 Bucket Existence
         run: |
@@ -50,10 +71,14 @@ jobs:
             echo "Bucket does not exist. Creating..."
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
           fi
-      - name: Update Backend Configuration
+      - name: Update Backend and Provider Configuration
         run: |
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
+      - name: Build terraform.tfvars
+        run: |
+          python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
 
       - name: Set AWS Region
         run: aws configure set region ${AWS_REGION}
@@ -72,8 +97,44 @@ jobs:
 
 
       - name: Terraform Plan
-        run: terraform plan -input=false
+        run: terraform plan
 
-      # - name: Terraform Apply
-      #   run: |
-      #     terraform apply -auto-approve tfplan
+      - name: Terraform Apply
+        run: |
+          terraform destroy -auto-approve
+
+  # terraform:
+  #   name: 'Terraform'
+  #   runs-on: ubuntu-latest
+  #   environment: production
+
+  #   needs: install-aws-cli
+
+  #   defaults:
+  #     run:
+  #       shell: bash
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+
+  #     - name: Update Backend Configuration
+  #       run: |
+  #         sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+  #         sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
+
+  #     - name: Set AWS Region
+  #       run: aws configure set region ${AWS_REGION}
+
+  #     - name: Terraform Init
+  #       run: terraform init
+
+  #     - name: Terraform Format
+  #       run: terraform fmt -check
+
+  #     - name: Terraform Plan
+  #       run: terraform plan -input=false
+
+  #     - name: Terraform Apply
+  #       run: |
+  #         terraform apply -auto-approve tfplan
