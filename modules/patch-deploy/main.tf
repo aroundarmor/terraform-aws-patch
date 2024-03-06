@@ -1,7 +1,7 @@
 
 # Create S3 bucket
 resource "aws_s3_bucket" "maintenance_window_bucket" {
-  bucket = "ollion-maintenance-window-${var.account_id}-in-${var.region}"
+  bucket = "ollion-maintenance-window-${var.mw_name}-in-${var.region}"
 
 }
 
@@ -9,7 +9,7 @@ resource "aws_s3_bucket" "maintenance_window_bucket" {
 ####################################################################
 # Create SNS topic
 resource "aws_sns_topic" "example" {
-  name = "example-topic"
+  name = "ollion-patch-${aws_ssm_maintenance_window.example.id}"
 }
 
 # Create SNS topic policy allowing publish and subscribe for all principals
@@ -32,6 +32,7 @@ resource "aws_sns_topic_policy" "example" {
 }
 
 # Subscribe email to SNS topic
+
 resource "aws_sns_topic_subscription" "example" {
   topic_arn = aws_sns_topic.example.arn
   protocol  = "email"
@@ -245,7 +246,7 @@ resource "aws_ssm_patch_group" "example" {
 #lambda to start
 
 resource "aws_iam_role" "lambda_role" {
-  name = "lambda_execution_role"
+  name = "lambda_execution_role_${aws_ssm_maintenance_window.example.id}"
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -261,7 +262,7 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name        = "lambda_policy"
+  name        = "lambda_policy_${aws_ssm_maintenance_window.example.id}"
   description = "Policy for Lambda function"
 
   policy = jsonencode({
@@ -302,7 +303,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
 }
 
 resource "aws_lambda_function" "lambda_start_function" {
-  function_name = var.lambda_start_name
+  function_name = "lambda-start-${aws_ssm_maintenance_window.example.id}"
   architectures = ["x86_64"]
   package_type  = "Zip"
   filename      = "start_function_payload.zip"
@@ -328,7 +329,7 @@ resource "aws_lambda_function" "lambda_start_function" {
 ####################################################################
 # Create Role for schedulers
 resource "aws_iam_role" "scheduler_role" {
-  name = "scheduler_execution_role"
+  name = "scheduler_execution_role-${aws_ssm_maintenance_window.example.id}"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -350,7 +351,7 @@ resource "aws_iam_role" "scheduler_role" {
 }
 
 resource "aws_iam_policy" "scheduler_policy" {
-  name        = "scheduler_policy"
+  name        = "scheduler_policy_${aws_ssm_maintenance_window.example.id}"
   description = "Policy for AWS Scheduler execution"
 
   policy = jsonencode({
@@ -360,8 +361,8 @@ resource "aws_iam_policy" "scheduler_policy" {
         "Effect" : "Allow",
         "Action" : "lambda:InvokeFunction",
         "Resource" : [
-          # "aws_lambda_function.lambda_start_function.arn/*",
-          aws_lambda_function.lambda_start_function.arn
+          "${aws_lambda_function.lambda_start_function.arn}:*",
+          "${aws_lambda_function.lambda_start_function.arn}"
         ]
       }
     ]
@@ -391,10 +392,10 @@ resource "aws_scheduler_schedule" "start" {
 
 
   target {
-    arn      = "arn:aws:scheduler:::aws-sdk:lambda:invoke"
+    arn      = aws_lambda_function.lambda_start_function.arn
     role_arn = aws_iam_role.scheduler_role.arn
     input = jsonencode({
-      "FunctionName" : aws_lambda_function.lambda_start_function.function_name,
+      "FunctionName" : aws_lambda_function.lambda_start_function.arn,
       "Payload" : jsonencode({ "patchgroup_values" : var.patch_group_tag_value }),
       "InvocationType" : "Event"
     })
