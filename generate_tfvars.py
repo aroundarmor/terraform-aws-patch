@@ -4,66 +4,85 @@ import sys
 def generate_tfvars(input_csv, output_tfvars):
     with open(input_csv, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
-        row = next(reader)  # Assuming there's only one row in the CSV
-        
-        # Open tfvars file for writing
-        with open(output_tfvars, 'w') as tfvars_file:
-            # Write variable assignments to the tfvars file
-            tfvars_file.write(f"""\
-account_id                 = {row['account_id']}
-region                     = "{row['region']}"
-email_notification         = "{row['email_notification']}"
-mw_name                    = "{row['mw_name']}"
-schedule                   = "{row['schedule']}"
-duration                   = {row['duration']}
-allow_unassociated_targets = {row['allow_unassociated_targets']}
-enabled                    = {row['enabled']}
-schedule_timezone          = "{row['schedule_timezone']}"
-patch_group_tag_value      = "{row['patch_group_tag_value']}"
-operation                  = {row['operation']}
-reboot_option              = {row['reboot_option']}
-operating_system           = "{row['operating_system']}"
-start_instance             = "{row['start_instance']}"
-""")
-            
-            # Write filters to the tfvars file
-            if row['operating_system'] == 'windows':
-                tfvars_file.write(f"""\
-windows_patch_filter = {{
-  PRODUCT_FAMILY = {row['PRODUCT_FAMILY']},
-  CLASSIFICATION = {row['CLASSIFICATION']},
-  MSRC_SEVERITY  = {row['MSRC_SEVERITY']}
-}}
-""")
-            elif row['operating_system'] == 'debian':
-                tfvars_file.write(f"""\
-debian_patch_filter = {{
-  PRODUCT  = {row['PRODUCT']},
-  PRIORITY = {row['PRIORITY']}
-}}
-""")
-            elif row['operating_system'] == 'ubuntu':
-                tfvars_file.write(f"""\
-ubuntu_patch_filter = {{
-  PRODUCT  = {row['PRODUCT']},
-  PRIORITY = {row['PRIORITY']}
-}}
-""")
-            elif row['operating_system'] == 'macos':
-                tfvars_file.write(f"""\
-macos_patch_filter = {{
-  PRODUCT        = {row['PRODUCT']},
-  CLASSIFICATION = {row['CLASSIFICATION']}
-}}
-""")
+        mw_data = {}
+        for row in reader:
+            mw_name = row['mw_name']
+            mw_data[mw_name] = {
+                'mw_name': f'"{mw_name}"',
+                'enabled': row['enabled'].lower(),
+                'account_id': row['account_id'],
+                'region': f'"{row["region"]}"',
+                'email_notification': f'"{row["email_notification"]}"',
+                'schedule': f'"{row["schedule"]}"',
+                'schedule_start': f'"{row["schedule_start"]}"',
+                'duration': row['duration'],
+                'allow_unassociated_targets': f'"{row["allow_unassociated_targets"].lower()}"',
+                'schedule_timezone': f'"{row["schedule_timezone"]}"',
+                'patch_group_tag_value': f'"{row["patch_group_tag_value"]}"',
+                'operation': f'["{row["operation"]}"]',
+                'reboot_option': f'["{row["reboot_option"]}"]',
+                'operating_system': f'"{row["operating_system"].upper()}"',
+                'approved_patches': '[]',
+                'rejected_patches': '[]',
+                'compliance_level': f'"{row["compliance_level"].upper()}"',
+                'enable_non_security': row['enable_non_security'].lower(),
+                'approve_after_days': row['approve_after_days'],
+                'start_instance': f'"{row["start_instance"].upper()}"'
+            }
+            if row['operating_system'].upper() == 'WINDOWS':
+                classification_values = [f'"{val.strip()}"' for val in row["CLASSIFICATION"].split(",")]
+                product_family_values = [f'"{val.strip()}"' for val in row["PRODUCT_FAMILY"].split(",")]
+                msrc_severity_values = [f'"{val.strip()}"' for val in row["MSRC_SEVERITY"].split(",")]
+                mw_data[mw_name]['windows_patch_filter'] = {
+                    'CLASSIFICATION': f'[{", ".join(classification_values)}]',
+                    'PRODUCT_FAMILY': f'[{", ".join(product_family_values)}]',
+                    'MSRC_SEVERITY': f'[{", ".join(msrc_severity_values)}]'
+                }
+            elif row['operating_system'].upper() == 'DEBIAN':
+                product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                priority_values = [f'"{val.strip()}"' for val in row["PRIORITY"].split(",")]
+                mw_data[mw_name]['debian_patch_filter'] = {
+                    'PRODUCT': f'[{", ".join(product_values)}]',
+                    'PRIORITY': f'[{", ".join(priority_values)}]'
+                }
+            elif row['operating_system'].upper() == 'UBUNTU':
+                product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                priority_values = [f'"{val.strip()}"' for val in row["PRIORITY"].split(",")]                
+                mw_data[mw_name]['ubuntu_patch_filter'] = {
+                    'PRODUCT': f'[{", ".join(product_values)}]',
+                    'PRIORITY': f'[{", ".join(priority_values)}]'
+                }
+            elif row['operating_system'].upper() == 'MACOS':
+                product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                classification_values = [f'"{val.strip()}"' for val in row["CLASSIFICATION"].split(",")]
+                mw_data[mw_name]['macos_patch_filter'] = {
+                    'PRODUCT': f'[{", ".join(product_values)}]',
+                    'CLASSIFICATION': f'[{", ".join(classification_values)}]'
+                }
             else:
-                tfvars_file.write(f"""\
-default_patch_filter = {{
-  PRODUCT        = {row['PRODUCT']},
-  CLASSIFICATION = {row['CLASSIFICATION']},
-  SEVERITY       = {row['SEVERITY']}
-}}
-""")
+                product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                classification_values = [f'"{val.strip()}"' for val in row["CLASSIFICATION"].split(",")]
+                severity_values = [f'"{val.strip()}"' for val in row["SEVERITY"].split(",")]
+                mw_data[mw_name]['default_patch_filter'] = {
+                    'PRODUCT': f'[{", ".join(product_values)}]',
+                    'CLASSIFICATION': f'[{", ".join(classification_values)}]',
+                    'SEVERITY': f'[{", ".join(severity_values)}]'
+                }
+
+        with open(output_tfvars, 'w') as tfvars_file:
+            tfvars_file.write('maintenance_window = {\n')
+            for mw_name, data in mw_data.items():
+                tfvars_file.write(f'  {mw_name} = {{\n')
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        tfvars_file.write(f'    {key} = {{\n')
+                        for k, v in value.items():
+                            tfvars_file.write(f'      {k} = {v}\n')
+                        tfvars_file.write('    }\n')
+                    else:
+                        tfvars_file.write(f'    {key} = {value}\n')
+                tfvars_file.write('  }\n')
+            tfvars_file.write('}\n')
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
