@@ -10,7 +10,10 @@ on:
         description: 'AWS Region'
         required: false
         default: 'us-east-1'
-
+      csv-file-path:
+        description: 'Path of the desired .csv file under csv-files directory'
+        required: true
+        
 permissions:
   contents: read
   id-token: write
@@ -73,6 +76,9 @@ jobs:
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
+      - name: Build terraform.tfvars
+        run: |
+          python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
 
       - name: Set AWS Region
         run: aws configure set region ${AWS_REGION}
