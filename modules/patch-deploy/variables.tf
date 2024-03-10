@@ -250,7 +250,7 @@ variable "windows_patch_filter" {
   description = "Patch filter for Windows operating system"
   type        = map(list(string))
   default = {
-    PRODUCT_FAMILY = ["WindowsServer2019", "WindowsServer2016"],
+    PRODUCT = ["WindowsServer2019", "WindowsServer2016"],
     CLASSIFICATION = ["CriticalUpdates", "SecurityUpdates"],
     MSRC_SEVERITY  = ["Critical", "Important"]
   }
