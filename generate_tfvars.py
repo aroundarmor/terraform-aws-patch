@@ -16,7 +16,7 @@ def generate_tfvars(input_csv, output_tfvars):
                 'schedule': f'"{row["schedule"]}"',
                 'schedule_start': f'"{row["schedule_start"]}"',
                 'duration': row['duration'],
-                'allow_unassociated_targets': f'"{row["allow_unassociated_targets"].lower()}"',
+                'allow_unassociated_targets': row['allow_unassociated_targets'].lower(),
                 'schedule_timezone': f'"{row["schedule_timezone"]}"',
                 'patch_group_tag_value': f'"{row["patch_group_tag_value"]}"',
                 'operation': f'["{row["operation"]}"]',
@@ -31,11 +31,11 @@ def generate_tfvars(input_csv, output_tfvars):
             }
             if row['operating_system'].upper() == 'WINDOWS':
                 classification_values = [f'"{val.strip()}"' for val in row["CLASSIFICATION"].split(",")]
-                product_family_values = [f'"{val.strip()}"' for val in row["PRODUCT_FAMILY"].split(",")]
+                PRODUCT_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
                 msrc_severity_values = [f'"{val.strip()}"' for val in row["MSRC_SEVERITY"].split(",")]
                 mw_data[mw_name]['windows_patch_filter'] = {
                     'CLASSIFICATION': f'[{", ".join(classification_values)}]',
-                    'PRODUCT_FAMILY': f'[{", ".join(product_family_values)}]',
+                    'PRODUCT': f'[{", ".join(PRODUCT_values)}]',
                     'MSRC_SEVERITY': f'[{", ".join(msrc_severity_values)}]'
                 }
             elif row['operating_system'].upper() == 'DEBIAN':
