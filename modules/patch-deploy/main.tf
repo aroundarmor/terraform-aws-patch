@@ -65,6 +65,14 @@ locals {
 # output "adjusted_cron_expression" {
 #   value = local.adjusted_cron_expression
 # }
+####################################################################
+####################################################################
+# Create Cloudwatch Log group
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "ssm/aws/AWS-RunPatchBaseline-${var.mw_name}"
+  retention_in_days = 60  # Set the desired retention period for logs, in days
+}
+
 
 ####################################################################
 ####################################################################
@@ -104,7 +112,8 @@ resource "aws_ssm_maintenance_window_task" "example_task" {
   cutoff_behavior  = var.cutoff_behavior
   task_type        = var.task_type
   task_arn         = var.task_arn
-  service_role_arn = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
+#  service_role_arn = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
+  service_role_arn = "arn:aws:iam::${var.account_id}:role/aws-service-role/ssm.amazonaws.com/AWSServiceRoleForAmazonSSM"
   priority         = var.priority
   targets {
     key    = "WindowTargetIds"
@@ -124,16 +133,17 @@ resource "aws_ssm_maintenance_window_task" "example_task" {
 
       output_s3_bucket     = aws_s3_bucket.maintenance_window_bucket.id
       output_s3_key_prefix = "/output_logs/${var.mw_name}"
+      service_role_arn = "arn:aws:iam::${var.account_id}:role/OllionPatchingAutomation"
 
-      # notification_config {
-      #   notification_arn    = aws_sns_topic.example.arn
-      #   notification_events = ["Success"]
-      #   notification_type   = "Command"
+      notification_config {
+        notification_arn    = aws_sns_topic.example.arn
+        notification_events = ["Success"]
+        notification_type   = "Command"
 
-      # }
+      }
 
       cloudwatch_config {
-        cloudwatch_log_group_name = "aws/ssm/AWS-RunPatchBaseline-${var.mw_name}"
+        cloudwatch_log_group_name = aws_cloudwatch_log_group.example.name
         cloudwatch_output_enabled = var.cloudwatch_output_enabled
       }
     }
@@ -280,7 +290,7 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:PutLogEvents"
         ],
         "Resource" : [
-          "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/${var.lambda_start_name}:*"
+          "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/${aws_lambda_function.lambda_start_function.function_name}:*"
         ]
       },
       {
@@ -289,7 +299,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "ec2:DescribeInstances",
           "ec2:DescribeInstanceStatus",
           "ec2:StartInstances",
-          "ec2:DescribeTags"
+          "ec2:DescribeTags",
+          "ec2:CreateTags"
         ],
         "Resource" : "*"
       }
@@ -300,6 +311,11 @@ resource "aws_iam_policy" "lambda_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_policy.arn
   role       = aws_iam_role.lambda_role.name
+}
+
+resource "aws_cloudwatch_log_group" "lambda_start" {
+  name              = "/aws/lambda/lambda-start-${aws_ssm_maintenance_window.example.id}"
+  retention_in_days = 14
 }
 
 resource "aws_lambda_function" "lambda_start_function" {
@@ -317,10 +333,95 @@ resource "aws_lambda_function" "lambda_start_function" {
   }
   logging_config {
     log_format = "Text"
-    log_group  = "/aws/lambda/${var.lambda_start_name}/${var.mw_name}"
+    log_group  = aws_cloudwatch_log_group.lambda_start.name
   }
 }
 
+####################################################################
+####################################################################
+#lambda to stop
+
+resource "aws_iam_role" "lambda_stop_role" {
+  name = "stop_execution_role_${aws_ssm_maintenance_window.example.id}"
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "lambda.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "lambda_stop_policy" {
+  name        = "lambda_stop_policy_${aws_ssm_maintenance_window.example.id}"
+  description = "Policy for Lambda function"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : "logs:CreateLogGroup",
+        "Resource" : "arn:aws:logs:${var.region}:${var.account_id}:*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : [
+          "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/${aws_lambda_function.lambda_stop_function.function_name}:*"
+        ]
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus",
+          "ec2:StopInstances",
+          "ec2:DescribeTags",
+          "ec2:DeleteTags"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_stop_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_stop_policy.arn
+  role       = aws_iam_role.lambda_stop_role.name
+}
+
+resource "aws_cloudwatch_log_group" "lambda_stop" {
+  name              = "/aws/lambda/lambda-stop-${aws_ssm_maintenance_window.example.id}"
+  retention_in_days = 14
+}
+
+resource "aws_lambda_function" "lambda_stop_function" {
+  function_name = "lambda-stop-${aws_ssm_maintenance_window.example.id}"
+  architectures = ["x86_64"]
+  package_type  = "Zip"
+  filename      = "stop_function_payload.zip"
+  role          = aws_iam_role.lambda_stop_role.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.12"
+  timeout       = 15
+  memory_size   = 128
+  ephemeral_storage {
+    size = 512
+  }
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.lambda_stop.name
+  }
+}
 
 
 
