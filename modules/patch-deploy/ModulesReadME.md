@@ -17,13 +17,20 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_log_group.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.lambda_start](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.lambda_stop](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_iam_policy.lambda_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.lambda_stop_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.scheduler_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.lambda_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.lambda_stop_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.scheduler_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.lambda_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.lambda_stop_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.scheduler_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.lambda_start_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_function.lambda_stop_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 | [aws_s3_bucket.maintenance_window_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_scheduler_schedule.start](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/scheduler_schedule) | resource |
 | [aws_sns_topic.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
@@ -79,7 +86,7 @@ No modules.
 | <a name="input_task_arn"></a> [task\_arn](#input\_task\_arn) | The ARN of the task to execute. | `string` | `"AWS-RunPatchBaseline"` | no |
 | <a name="input_task_type"></a> [task\_type](#input\_task\_type) | The type of task being registered. | `string` | `"RUN_COMMAND"` | no |
 | <a name="input_ubuntu_patch_filter"></a> [ubuntu\_patch\_filter](#input\_ubuntu\_patch\_filter) | Patch filter for Ubuntu operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Ubuntu"<br>  ]<br>}</pre> | no |
-| <a name="input_windows_patch_filter"></a> [windows\_patch\_filter](#input\_windows\_patch\_filter) | Patch filter for Windows operating system | `map(list(string))` | <pre>{<br>  "CLASSIFICATION": [<br>    "CriticalUpdates",<br>    "SecurityUpdates"<br>  ],<br>  "MSRC_SEVERITY": [<br>    "Critical",<br>    "Important"<br>  ],<br>  "PRODUCT_FAMILY": [<br>    "WindowsServer2019",<br>    "WindowsServer2016"<br>  ]<br>}</pre> | no |
+| <a name="input_windows_patch_filter"></a> [windows\_patch\_filter](#input\_windows\_patch\_filter) | Patch filter for Windows operating system | `map(list(string))` | <pre>{<br>  "CLASSIFICATION": [<br>    "CriticalUpdates",<br>    "SecurityUpdates"<br>  ],<br>  "MSRC_SEVERITY": [<br>    "Critical",<br>    "Important"<br>  ],<br>  "PRODUCT": [<br>    "WindowsServer2019",<br>    "WindowsServer2016"<br>  ]<br>}</pre> | no |
 
 ## Outputs
 
