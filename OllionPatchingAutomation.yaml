@@ -7,12 +7,44 @@ Parameters:
     MinLength: 12
     MaxLength: 12
     AllowedPattern: "^[0-9]*"
+# added parameters for OIDC
+  GitHubOrg:
+    Description: Name of GitHub organization/user (case sensitive)
+    Type: String
+  RepositoryName:
+    Description: Name of GitHub repository (case sensitive)
+    Type: String
+  OIDCProviderArn:
+    Description: Arn for the GitHub OIDC Provider.
+    Default: ""
+    Type: String
+  OIDCAudience:
+    Description: Audience supplied to configure-aws-credentials.
+    Default: "sts.amazonaws.com"
+    Type: String
+Conditions:
+  CreateOIDCProvider: !Equals 
+    - !Ref OIDCProviderArn
+    - ""
+
 Metadata: 
   AWS::CloudFormation::Interface: 
     ParameterLabels:
       CustomerAutomationAccountNum:
         default: "Customer's Automation Account Number"
 Resources:
+#OIDC creation
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - ffffffffffffffffffffffffffffffffffffffff
+
+# Role Creation
   OllionPatchingAutomation:
     Type: AWS::IAM::Role
     Properties: 
@@ -24,6 +56,21 @@ Resources:
             Principal:
               AWS: !Sub "${CustomerAutomationAccountNum}"
             Action: 'sts:AssumeRole'
+        #statement for OIDC
+        Version: 2024-03-12
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !If
+                - CreateOIDCProvider
+                - !GetAtt GithubOidc.Arn
+                - !Ref OIDCProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: !Ref OIDCAudience
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
       Policies:
         - PolicyName: OllionPatchingAutomationPolicy
           PolicyDocument: 
@@ -90,6 +137,10 @@ Resources:
                   - 'logs:PutLogEvents'
                   - 'logs:DescribeLogGroups'
                   - 'logs:DescribeLogStreams'
+                  - 'logs:TagResource'
+                  - 'logs:PutRetentionPolicy'
+                  - 'logs:ListTagsLogGroup'
+                  - 'logs:DeleteLogGroup'
                 Resource: '*'
               - Effect: Allow
                 Action:
