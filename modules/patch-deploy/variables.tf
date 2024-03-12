@@ -128,8 +128,7 @@ variable "max_errors" {
 }
 
 variable "cutoff_behavior" {
-  description = "Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached."
-  #Valid values are CONTINUE_TASK and CANCEL_TASK.
+  description = "Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached. Valid values are CONTINUE_TASK and CANCEL_TASK."
   type    = string
   default = "CANCEL_TASK"
 }
@@ -161,15 +160,13 @@ variable "priority" {
 }
 
 variable "operation" {
-  description = "This is used to configure type of operation to perform"
-  # Possible values can be Scan/Install
+  description = "This is used to configure type of operation to perform. Possible values can be Scan/Install"
   type    = list(string)
   default = ["Scan"]
 }
 
 variable "reboot_option" {
-  description = "this is used to set reboot options in maitenance window task"
-  # Possible values RebootIfNeeded | NoReboot
+  description = "This is used to set reboot options in maitenance window task. Possible values RebootIfNeeded | NoReboot"
   type    = list(string)
   default = ["NoReboot"]
 }
@@ -181,8 +178,7 @@ variable "cloudwatch_output_enabled" {
 }
 
 variable "notification_events" {
-  description = "The different events for which you can receive notifications"
-  # Valid values: All, InProgress, Success, TimedOut, Cancelled, and Failed
+  description = "The different events for which you can receive notifications. Valid values: All, InProgress, Success, TimedOut, Cancelled, and Failed"
   type    = string
   default = "All"
 }
@@ -191,9 +187,8 @@ variable "notification_events" {
 ####################################################################
 # variables for patch baseline
 variable "operating_system" {
-  description = "Operating system the patch baseline applies to."
+  description = "Operating system the patch baseline applies to. Valid values are ALMA_LINUX, AMAZON_LINUX, AMAZON_LINUX_2, AMAZON_LINUX_2022, AMAZON_LINUX_2023, CENTOS, DEBIAN, MACOS, ORACLE_LINUX, RASPBIAN, REDHAT_ENTERPRISE_LINUX, ROCKY_LINUX, SUSE, UBUNTU, and WINDOWS"
   type        = string
-  #Valid values are ALMA_LINUX, AMAZON_LINUX, AMAZON_LINUX_2, AMAZON_LINUX_2022, AMAZON_LINUX_2023, CENTOS, DEBIAN, MACOS, ORACLE_LINUX, RASPBIAN, REDHAT_ENTERPRISE_LINUX, ROCKY_LINUX, SUSE, UBUNTU, and WINDOWS
   default = "WINDOWS"
 }
 
@@ -204,8 +199,7 @@ variable "approved_patches" {
 }
 
 variable "rejected_patches_action" {
-  description = "Action for Patch Manager to take on patches included in the rejected_patches list."
-  # Valid values are ALLOW_AS_DEPENDENCY and BLOCK.
+  description = "Action for Patch Manager to take on patches included in the rejected_patches list. Valid values are ALLOW_AS_DEPENDENCY and BLOCK."
   default = "BLOCK"
 }
 
@@ -216,31 +210,25 @@ variable "rejected_patches" {
 }
 
 variable "approve_after_days" {
-  description = "Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline"
-  #Valid Range: 0 to 100.
-  #Conflicts with approve_until_date
+  description = "Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Conflicts with approve_until_date. Valid Range: 0 to 100."
   type    = number
   default = 7
 }
 
 variable "approve_until_date" {
-  description = "Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically"
-  #Date is formatted as YYYY-MM-DD
-  #Conflicts with approve_after_days
+  description = "Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as YYYY-MM-DD. Conflicts with approve_after_days"
   type    = string
   default = null
 }
 
 variable "compliance_level" {
-  description = "Compliance level for patches approved by this rule"
-  #Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED
+  description = "Compliance level for patches approved by this rule. Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED"
   type    = string
   default = "UNSPECIFIED"
 }
 
 variable "enable_non_security" {
-  description = "Boolean enabling the application of non-security updates"
-  #Valid for Linux instances only.
+  description = "Boolean enabling the application of non-security updates. Valid for Linux instances only."
   type    = bool
   default = false
 }
@@ -298,8 +286,7 @@ variable "default_patch_filter" {
 ####################################################################
 # Create scheduler variables
 variable "start_instance" {
-  description = "Specifies whether the schedule is enabled or disabled."
-  # One of: ENABLED (default), DISABLED.
+  description = "Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED."
   type    = string
   default = "ENABLED"
 }
