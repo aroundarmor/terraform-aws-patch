@@ -23,16 +23,20 @@ No modules.
 | [aws_iam_policy.lambda_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.lambda_stop_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.scheduler_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.scheduler_stop_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.lambda_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.lambda_stop_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.scheduler_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.scheduler_stop_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.lambda_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.lambda_stop_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.scheduler_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.scheduler_stop_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.lambda_start_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 | [aws_lambda_function.lambda_stop_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 | [aws_s3_bucket.maintenance_window_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_scheduler_schedule.start](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/scheduler_schedule) | resource |
+| [aws_scheduler_schedule.stop](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/scheduler_schedule) | resource |
 | [aws_sns_topic.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [aws_sns_topic_policy.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
 | [aws_sns_topic_subscription.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
@@ -62,7 +66,6 @@ No modules.
 | <a name="input_enable_non_security"></a> [enable\_non\_security](#input\_enable\_non\_security) | Boolean enabling the application of non-security updates. Valid for Linux instances only. | `bool` | `false` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Whether the maintenance window is enabled. Default: true. | `bool` | `true` | no |
 | <a name="input_end_date"></a> [end\_date](#input\_end\_date) | Timestamp in ISO-8601 extended format when to no longer run the maintenance window. | `string` | `null` | no |
-| <a name="input_lambda_start_name"></a> [lambda\_start\_name](#input\_lambda\_start\_name) | This will reference the name of lambda that starts the stopped instances | `string` | `"ollion-start-function"` | no |
 | <a name="input_macos_patch_filter"></a> [macos\_patch\_filter](#input\_macos\_patch\_filter) | Patch filter for macOS operating system | `map(list(string))` | <pre>{<br>  "CLASSIFICATION": [<br>    "Critical",<br>    "Security"<br>  ],<br>  "PRODUCT": [<br>    "macOS"<br>  ]<br>}</pre> | no |
 | <a name="input_max_concurrency"></a> [max\_concurrency](#input\_max\_concurrency) | The maximum number of targets this task can be run for in parallel. | `number` | `5` | no |
 | <a name="input_max_errors"></a> [max\_errors](#input\_max\_errors) | The maximum number of errors allowed before this task stops being scheduled. | `number` | `5` | no |
@@ -80,9 +83,12 @@ No modules.
 | <a name="input_resource_type"></a> [resource\_type](#input\_resource\_type) | The type of target being registered with the Maintenance Window. Possible values are INSTANCE and RESOURCE\_GROUP. | `string` | `"INSTANCE"` | no |
 | <a name="input_schedule"></a> [schedule](#input\_schedule) | The schedule of the Maintenance Window in the form of a cron or rate expression. | `string` | n/a | yes |
 | <a name="input_schedule_offset"></a> [schedule\_offset](#input\_schedule\_offset) | The number of days to wait after the date and time specified by a CRON expression before running the maintenance window. | `number` | `null` | no |
+| <a name="input_schedule_start"></a> [schedule\_start](#input\_schedule\_start) | This value will be fed to start scheduler and will be used to start the servers before running Scan/Install operations | `string` | n/a | yes |
+| <a name="input_schedule_stop"></a> [schedule\_stop](#input\_schedule\_stop) | This value will be fed to start scheduler and will be used to start the servers before running Scan/Install operations | `string` | n/a | yes |
 | <a name="input_schedule_timezone"></a> [schedule\_timezone](#input\_schedule\_timezone) | Timezone for schedule in Internet Assigned Numbers Authority (IANA) Time Zone Database format. | `string` | `"UTC"` | no |
 | <a name="input_start_date"></a> [start\_date](#input\_start\_date) | Timestamp in ISO-8601 extended format when to begin the maintenance window. | `string` | `null` | no |
 | <a name="input_start_instance"></a> [start\_instance](#input\_start\_instance) | Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED. | `string` | `"ENABLED"` | no |
+| <a name="input_stop_instance"></a> [stop\_instance](#input\_stop\_instance) | Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED. | `string` | `"ENABLED"` | no |
 | <a name="input_task_arn"></a> [task\_arn](#input\_task\_arn) | The ARN of the task to execute. | `string` | `"AWS-RunPatchBaseline"` | no |
 | <a name="input_task_type"></a> [task\_type](#input\_task\_type) | The type of task being registered. | `string` | `"RUN_COMMAND"` | no |
 | <a name="input_ubuntu_patch_filter"></a> [ubuntu\_patch\_filter](#input\_ubuntu\_patch\_filter) | Patch filter for Ubuntu operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Ubuntu"<br>  ]<br>}</pre> | no |
