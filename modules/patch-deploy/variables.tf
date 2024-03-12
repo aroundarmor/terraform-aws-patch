@@ -284,21 +284,31 @@ variable "default_patch_filter" {
 
 ####################################################################
 ####################################################################
-# Create scheduler variables
+# Create scheduler start variables
 variable "start_instance" {
   description = "Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED."
   type    = string
   default = "ENABLED"
 }
 
-####################################################################
-####################################################################
-# Create variables for start lambda function
-variable "lambda_start_name" {
-  description = "This will reference the name of lambda that starts the stopped instances"
-  type        = string
-  default     = "ollion-start-function"
+variable "schedule_start" {
+  description = "This value will be fed to start scheduler and will be used to start the servers before running Scan/Install operations"
+  type = string
 }
+####################################################################
+####################################################################
+# Create scheduler stop variables
+variable "stop_instance" {
+  description = "Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED."
+  type    = string
+  default = "ENABLED"
+}
+
+variable "schedule_stop" {
+  description = "This value will be fed to start scheduler and will be used to start the servers before running Scan/Install operations"
+  type = string
+}
+
 
 # additional variable
 # variables.tf
