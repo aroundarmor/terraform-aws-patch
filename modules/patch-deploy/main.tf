@@ -428,7 +428,7 @@ resource "aws_lambda_function" "lambda_stop_function" {
 
 ####################################################################
 ####################################################################
-# Create Role for schedulers
+# Create Role for start schedulers
 resource "aws_iam_role" "scheduler_role" {
   name = "scheduler_execution_role-${aws_ssm_maintenance_window.example.id}"
 
@@ -488,7 +488,8 @@ resource "aws_scheduler_schedule" "start" {
     maximum_window_in_minutes = 30
   }
 
-  schedule_expression          = local.adjusted_cron_expression
+  # schedule_expression          = local.adjusted_cron_expression
+  schedule_expression          = var.schedule_start
   schedule_expression_timezone = var.schedule_timezone
 
 
@@ -496,9 +497,7 @@ resource "aws_scheduler_schedule" "start" {
     arn      = aws_lambda_function.lambda_start_function.arn
     role_arn = aws_iam_role.scheduler_role.arn
     input = jsonencode({
-      "FunctionName" : aws_lambda_function.lambda_start_function.arn,
-      "Payload" : jsonencode({ "patchgroup_values" : var.patch_group_tag_value }),
-      "InvocationType" : "Event"
+      "patchgroup_values" : [var.patch_group_tag_value]
     })
   }
   depends_on = [aws_lambda_function.lambda_start_function, aws_iam_role.scheduler_role]
@@ -507,3 +506,77 @@ resource "aws_scheduler_schedule" "start" {
 
 ####################################################################
 ####################################################################
+# Create stop functionality
+resource "aws_iam_role" "scheduler_stop_role" {
+  name = "scheduler_stop_execution_role-${aws_ssm_maintenance_window.example.id}"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "scheduler.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : [var.account_id]
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "scheduler_stop_policy" {
+  name        = "scheduler_stop_policy_${aws_ssm_maintenance_window.example.id}"
+  description = "Policy for AWS Scheduler execution"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : "lambda:InvokeFunction",
+        "Resource" : [
+          "${aws_lambda_function.lambda_stop_function.arn}:*",
+          "${aws_lambda_function.lambda_stop_function.arn}"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "scheduler_stop_policy_attachment" {
+  role       = aws_iam_role.scheduler_stop_role.name
+  policy_arn = aws_iam_policy.scheduler_stop_policy.arn
+}
+
+# Create aws_schedule_scheduler
+
+
+resource "aws_scheduler_schedule" "stop" {
+  state      = var.stop_instance
+  name       = "ollion-stop-${aws_ssm_maintenance_window.example.id}"
+  group_name = "default"
+
+  flexible_time_window {
+    mode                      = "OFF"
+    # maximum_window_in_minutes = 30
+  }
+
+  # schedule_expression          = local.adjusted_cron_expression
+  schedule_expression          = var.schedule_stop
+  schedule_expression_timezone = var.schedule_timezone
+
+
+  target {
+    arn      = aws_lambda_function.lambda_stop_function.arn
+    role_arn = aws_iam_role.scheduler_stop_role.arn
+    input = jsonencode({
+      "patchgroup_values" : [var.patch_group_tag_value]
+    })
+  }
+  depends_on = [aws_lambda_function.lambda_stop_function, aws_iam_role.scheduler_stop_role]
+}
