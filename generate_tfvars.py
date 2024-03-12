@@ -15,6 +15,7 @@ def generate_tfvars(input_csv, output_tfvars):
                 'email_notification': f'"{row["email_notification"]}"',
                 'schedule': f'"{row["schedule"]}"',
                 'schedule_start': f'"{row["schedule_start"]}"',
+                'schedule_stop': f'"{row["schedule_stop"]}"',
                 'duration': row['duration'],
                 'allow_unassociated_targets': row['allow_unassociated_targets'].lower(),
                 'schedule_timezone': f'"{row["schedule_timezone"]}"',
@@ -27,7 +28,8 @@ def generate_tfvars(input_csv, output_tfvars):
                 'compliance_level': f'"{row["compliance_level"].upper()}"',
                 'enable_non_security': row['enable_non_security'].lower(),
                 'approve_after_days': row['approve_after_days'],
-                'start_instance': f'"{row["start_instance"].upper()}"'
+                'start_instance': f'"{row["start_instance"].upper()}"',
+                'stop_instance': f'"{row["stop_instance"].upper()}"'
             }
             if row['operating_system'].upper() == 'WINDOWS':
                 classification_values = [f'"{val.strip()}"' for val in row["CLASSIFICATION"].split(",")]
