@@ -1,7 +1,7 @@
 
 # Create S3 bucket
 resource "aws_s3_bucket" "maintenance_window_bucket" {
-  bucket = "ollion-maintenance-window-${var.mw_name}-in-${var.account_id}"
+  bucket = "ollion-mw-${var.mw_name}-in-${var.account_id}"
 
 }
 
