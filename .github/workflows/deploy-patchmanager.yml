@@ -114,7 +114,7 @@ jobs:
           if aws s3api head-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate 2>&1; then
             echo "no terraform state exist to copy on local"
           else
-            aws s3 cp s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate ./terraform.tfstate
+            aws s3 cp s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate ./terraform.tfstate --recursive
           fi
 
       - name: Configure AWS Credentials
