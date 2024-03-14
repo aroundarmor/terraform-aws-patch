@@ -1,21 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates IAM role in customer accounts to allow the creation of Maintenance Windows for Patching events
+Description: Ollion infrastructure and patch reporting automation.  [DO NOT ALTER or DELETE]
 Parameters:
-  CustomerAutomationAccountNum:
+# added parameters for patch reporting 
+  externalID:
     Type: String
-    Description: 12 Digit AWS Account Number of the Ollion Owned Automation Account for the Customer
-    MinLength: 12
-    MaxLength: 12
-    AllowedPattern: "^[0-9]*"
+    Description: The external id used for assuming the cross account role
+    Default: "3f38e33d-8b6f-4fe1-9f8b-cbd0472f39c7"
+
 # added parameters for OIDC
   GitHubOrg:
     Description: Name of GitHub organization/user (case sensitive)
     Type: String
+    Default: "aroundarmor"
   RepositoryName:
     Description: Name of GitHub repository (case sensitive)
     Type: String
+    Default: "terraform-aws-patch"
   OIDCProviderArn:
-    Description: Arn for the GitHub OIDC Provider.
+    Description: Arn for the GitHub OIDC Provider. Please keep it BLANK.
     Default: ""
     Type: String
   OIDCAudience:
@@ -27,11 +29,6 @@ Conditions:
     - !Ref OIDCProviderArn
     - ""
 
-Metadata: 
-  AWS::CloudFormation::Interface: 
-    ParameterLabels:
-      CustomerAutomationAccountNum:
-        default: "Customer's Automation Account Number"
 Resources:
 #OIDC creation
   GithubOidc:
@@ -43,21 +40,12 @@ Resources:
         - sts.amazonaws.com
       ThumbprintList:
         - ffffffffffffffffffffffffffffffffffffffff
-
 # Role Creation
   OllionPatchingAutomation:
     Type: AWS::IAM::Role
     Properties: 
       RoleName: OllionPatchingAutomation
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "${CustomerAutomationAccountNum}"
-            Action: 'sts:AssumeRole'
-        #statement for OIDC
-        Version: 2024-03-12
         Statement:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
@@ -90,6 +78,7 @@ Resources:
                   - 's3:DeleteObject'
                   - 's3:DeleteBucket'
                   - 's3:PutBucketTagging'
+                  - 's3:PutBucketVersioning'
                 Resource: "*"
               - Effect: Allow
                 Action:
@@ -194,3 +183,41 @@ Resources:
                   - 'ssm:Describe*'
                 Resource: "*"
       Description: Allow Automation to create Maintenance windows associated with Patching Events
+
+
+# Adding Cross-account-Role for reporting
+  CrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: 
+                  Ref: externalID
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::471112587537:root"
+                - "arn:aws:iam::536269885160:root"
+        Version: "2012-10-17"
+      RoleName: Ollion-Platform-Automation
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      Tags: 
+        - Key: ollion_workload
+          Value: platform
+  CrossAccountPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - ssm:SendCommand
+            Effect: Allow
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: Ollion-PlatformAutomation
+      Roles:
+        - Ref: CrossAccountRole 
