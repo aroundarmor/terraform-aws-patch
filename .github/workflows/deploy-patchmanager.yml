@@ -58,6 +58,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
       - name: Install AWS CLI
         run: |
           sudo apt-get update
@@ -103,8 +106,8 @@ jobs:
       #     export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
       #     export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - name: Checkout
+      #   uses: actions/checkout@v4
         
       - name: Retrieve tfstate file from Remote Management S3
         run: |
@@ -176,11 +179,13 @@ jobs:
           terraform apply $output_file -auto-approve
           
       - name: Configure AWS CLI for Management Account for Uploading TF Plan and TF State
+        if: always()
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           
       - name: Upload TF Plan and TF State to Remote Management Account
+        if: always()
         run: |
           if [ -f "terraform.tfstate" ]; then
             aws s3 mv ./terraform.tfstate s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate --recursive
