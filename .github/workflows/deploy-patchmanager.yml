@@ -72,6 +72,8 @@ jobs:
         run: |
           if aws s3 ls s3://ollion-patching-terraform-state-in-767397916754 2>/dev/null; then
             echo "Bucket already exists."
+            aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-767397916754 --versioning-configuration Status=Enabled
+            echo "versioning is enabled"
           else
             echo "Bucket does not exist. Creating..."
             aws s3api create-bucket --bucket ollion-patching-terraform-state-in-767397916754 --region ${AWS_REGION}
