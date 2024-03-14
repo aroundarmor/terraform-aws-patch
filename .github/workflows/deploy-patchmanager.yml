@@ -74,46 +74,44 @@ jobs:
             aws s3api put-object --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --key tf_state/ --content-length 0
             aws s3api put-object --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --key tf_plan/ --content-length 0
           fi
-      - name: Update Backend and Provider Configuration
-        run: |
-          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
-          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
-          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
-      - name: Build terraform.tfvars
-        run: |
-          python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
-      - name: Set AWS Region
-        run: aws configure set region ${AWS_REGION}
+      # - name: Update Backend and Provider Configuration
+      #   run: |
+      #     sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+      #     sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
+      #     sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
+      # - name: Build terraform.tfvars
+      #   run: |
+      #     python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
+      # - name: Set AWS Region
+      #   run: aws configure set region ${AWS_REGION}
 
-      - name: Terraform Init
-        run: terraform init
+      # - name: Terraform Init
+      #   run: terraform init
 
-      - name: Terraform Format Check
-        run: |
-         if terraform fmt -check; then
-           echo "Terraform files are formatted correctly."
-         else
-           echo "Terraform files need formatting. Running terraform fmt..."
-           terraform fmt -recursive
-         fi
-      - name: Terraform Plan
-        run: |
-          current_time=$(date "+%Y%m%d%H%M%S")
-          output_file="tfplan_${current_time}.out"
-          terraform plan -out="$output_file"
+      # - name: Terraform Format Check
+      #   run: |
+      #    if terraform fmt -check; then
+      #      echo "Terraform files are formatted correctly."
+      #    else
+      #      echo "Terraform files need formatting. Running terraform fmt..."
+      #      terraform fmt -recursive
+      #    fi
+         
+      # - name: Terraform Plan
+      #   run: terraform plan -input=false
 
-      - name: Terraform Apply
-        run: |
-          terraform apply $output_file -auto-approve
+      # - name: Terraform Apply
+      #   run: |
+      #     terraform apply -auto-approve tfplan
           
-      - name: Upload TF Plan
-        if: always()
-        run: |
-          if ls tfplan_*.out 1>/dev/null 2>&1; then
-            aws s3 mv ./tfplan_*.out s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}/tf_plan/ --recursive
-          else
-            echo "Terraform Plan does not exist."
-          fi          
+      # - name: Upload TF Plan
+      #   if: always()
+      #   run: |
+      #     if ls tfplan_*.out 1>/dev/null 2>&1; then
+      #       aws s3 mv ./tfplan_*.out s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}/tf_plan/ --recursive
+      #     else
+      #       echo "Terraform Plan does not exist."
+      #     fi          
   # terraform:
   #   name: 'Terraform'
   #   runs-on: ubuntu-latest
