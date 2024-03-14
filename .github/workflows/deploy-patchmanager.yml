@@ -1,3 +1,4 @@
+
 name: 'Terraform-PatchManager'
 
 on:
@@ -25,75 +26,15 @@ env:
   # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
-  # setup-management-remote:
-  #   name: 'Remote-AWS-State-Storage-Setup'
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Configure AWS CLI
-  #       run: |
-  #         aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
-  #     - name: Create or Check S3 Bucket Existence
-  #       run: |
-  #         if aws s3 ls s3://ollion-patching-terraform-state-in-767397916754 2>/dev/null; then
-  #           echo "Bucket already exists."
-  #         else
-  #           echo "Bucket does not exist. Creating..."
-  #           aws s3api create-bucket --bucket ollion-patching-terraform-state-in-767397916754 --region ${AWS_REGION}
-  #           aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-767397916754 --versioning-configuration Status=Enabled
-  #         fi
-          
-  #     - name: Create a Folder for state file and tf plan
-  #       run: |
-  #         if aws s3 ls s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state && aws s3 ls s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_plan 2>/dev/null; then
-  #           echo "Folders of tf_state and tf_plan exist on the bucket."          
-  #         else
-  #           aws s3api put-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_state/ --content-length 0; aws s3api put-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_plan/ --content-length 0
-
-          
   deploy-aws-patchmanger-setup:
     name: 'Deploy-AWS-PatchManager-Setup'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
       - name: Install AWS CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli
-          
-      - name: Configure AWS CLI
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
-      - name: Create or Check S3 Bucket Existence
-        run: |
-          if aws s3 ls s3://ollion-patching-terraform-state-in-767397916754 2>/dev/null; then
-            echo "Bucket already exists."
-            aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-767397916754 --versioning-configuration Status=Enabled
-            echo "versioning is enabled"
-          else
-            echo "Bucket does not exist. Creating..."
-            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-767397916754 --region ${AWS_REGION}
-            aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-767397916754 --versioning-configuration Status=Enabled
-            echo "Bucket Created with Versioning Enabled."
-          fi
-          
-      - name: Create a Folder for state file and tf plan
-        run: |
-          if aws s3 ls s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state && aws s3 ls s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_plan 2>/dev/null; then
-            echo "Folders of tf_state and tf_plan exist on the bucket."          
-          else
-            aws s3api put-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_state/ --content-length 0
-            aws s3api put-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_plan/ --content-length 0
-            echo "Folders Created for tf_plan and tf_state in the management account bucket"
-          fi
-
       # - name: Configure AWS CLI
       #   run: |
       #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -106,16 +47,8 @@ jobs:
       #     export AWS_SECRET_ACCESS_KEY=$(echo $TEMP_ROLE | jq -r '.Credentials.SecretAccessKey')
       #     export AWS_SESSION_TOKEN=$(echo $TEMP_ROLE | jq -r '.Credentials.SessionToken')
 
-      # - name: Checkout
-      #   uses: actions/checkout@v4
-        
-      - name: Retrieve tfstate file from Remote Management S3
-        run: |
-          if aws s3api head-object --bucket ollion-patching-terraform-state-in-767397916754 --key ${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate 2>/dev/null; then
-            echo "no terraform state exist to copy on local"
-          else
-            aws s3 cp s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate ./terraform.tfstate --recursive
-          fi
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -130,29 +63,22 @@ jobs:
       #     echo $AWS_SECRET_ACCESS_KEY
       #     echo $AWS_SESSION_TOKEN
 
-      # - name: Create or Check S3 Bucket Existence
-      #   run: |
-      #     if aws s3 ls s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
-      #       echo "Bucket already exists."
-      #     else
-      #       echo "Bucket does not exist. Creating..."
-      #       aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
-      #     fi
-      
-      # - name: Update Backend and Provider Configuration
-      #   run: |
-      #     sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
-      #     sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
-      #     sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
-
-      - name: Update Provider Configuration
+      - name: Create or Check S3 Bucket Existence
         run: |
+          if aws s3 ls s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
+            echo "Bucket already exists."
+          else
+            echo "Bucket does not exist. Creating..."
+            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
+          fi
+      - name: Update Backend and Provider Configuration
+        run: |
+          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" provider.tf
-      
       - name: Build terraform.tfvars
         run: |
           python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
-
       - name: Set AWS Region
         run: aws configure set region ${AWS_REGION}
 
@@ -167,38 +93,12 @@ jobs:
            echo "Terraform files need formatting. Running terraform fmt..."
            terraform fmt -recursive
          fi
-
       - name: Terraform Plan
-        run: |
-          current_time=$(date "+%Y%m%d%H%M%S")
-          output_file="tfplan_${current_time}.out"
-          terraform plan -out="$output_file"
+        run: terraform plan
 
       - name: Terraform Apply
         run: |
-          terraform apply $output_file -auto-approve
-          
-      - name: Configure AWS CLI for Management Account for Uploading TF Plan and TF State
-        if: always()
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
-      - name: Upload TF Plan and TF State to Remote Management Account
-        if: always()
-        run: |
-          if [ -f "terraform.tfstate" ]; then
-            aws s3 mv ./terraform.tfstate s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_state/terraform.tfstate --recursive
-          else
-            echo "Terraform state does not exist."
-          fi
-          
-          if ls tfplan_*.out 1>/dev/null 2>&1; then
-            aws s3 mv ./tfplan_*.out s3://ollion-patching-terraform-state-in-767397916754/${{ github.event.inputs.aws-account-id }}/tf_plan/ --recursive
-          else
-            echo "Terraform Plan does not exist."
-          fi
-            
+          terraform apply -auto-approve
   # terraform:
   #   name: 'Terraform'
   #   runs-on: ubuntu-latest
