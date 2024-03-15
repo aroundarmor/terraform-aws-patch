@@ -1,5 +1,5 @@
 
-name: 'Terraform-PatchManager-Test'
+name: 'Terraform-PatchManager-Multi-Region'
 
 on:
   workflow_dispatch:
@@ -54,7 +54,7 @@ jobs:
             aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --versioning-configuration Status=Enabled
           fi   
       
-      - name: Update Backend and Provider Configuration
+      - name: Update Backend Configuration
         run: |
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
