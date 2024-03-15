@@ -1,0 +1,94 @@
+
+name: 'Terraform-PatchManager-Test'
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws-account-id:
+        description: 'AWS Account ID'
+        required: true
+      aws-region:
+        description: 'AWS Region'
+        required: false
+        default: 'us-east-1'
+      csv-file-path:
+        description: 'Path of the desired .csv file under csv-files directory'
+        required: true
+        
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_ACCOUNT_ID: ${{ github.event.inputs.aws-account-id }}
+  AWS_REGION: ${{ github.event.inputs.aws-region }}
+
+jobs:
+  deploy-aws-patchmanger-test-setup:
+    name: 'Deploy-AWS-PatchManager-Test-Setup'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::${{ github.event.inputs.aws-account-id }}:role/OllionPatchingAutomation
+
+      - name: Create or Check S3 Bucket Existence
+        run: |
+          if aws s3 ls s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
+            echo "Bucket already exists."
+          else
+            echo "Bucket does not exist. Creating..."
+            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
+            aws s3api put-bucket-versioning --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --versioning-configuration Status=Enabled
+          fi   
+      
+      - name: Update Backend and Provider Configuration
+        run: |
+          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
+
+      - name: Build terraform.tfvars
+        run: |
+          python3 generate_tfvars.py ./csv-files/${{ github.event.inputs.csv-file-path }} terraform.tfvars
+
+      - name: Build provider.tf
+        run: |
+          python3 generate_provider.py ./csv-files/${{ github.event.inputs.csv-file-path }} provider.tf
+          
+      - name: Build terraform.tfvars
+        run: |
+          python3 generate_main.py ./csv-files/${{ github.event.inputs.csv-file-path }} main.tf
+          
+      - name: Set AWS Region
+        run: aws configure set region ${AWS_REGION}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: |
+         if terraform fmt -check; then
+           echo "Terraform files are formatted correctly."
+         else
+           echo "Terraform files need formatting. Running terraform fmt..."
+           terraform fmt -recursive
+         fi
+         
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve
