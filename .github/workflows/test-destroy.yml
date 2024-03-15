@@ -1,5 +1,5 @@
 
-name: 'Terraform-PatchManager-Test'
+name: 'Terraform-PatchManager-Test-Destroy'
 
 on:
   workflow_dispatch:
