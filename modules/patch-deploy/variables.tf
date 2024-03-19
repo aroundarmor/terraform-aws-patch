@@ -249,6 +249,7 @@ variable "debian_patch_filter" {
   type        = map(list(string))
   default = {
     PRODUCT  = ["Debian"],
+    SECTION  = ["*"],
     PRIORITY = ["high"]
   }
 }
@@ -258,6 +259,7 @@ variable "ubuntu_patch_filter" {
   type        = map(list(string))
   default = {
     PRODUCT  = ["Ubuntu"],
+    SECTION  = ["*"],
     PRIORITY = ["high"]
   }
 }
