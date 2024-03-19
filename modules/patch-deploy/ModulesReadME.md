@@ -59,7 +59,7 @@ No modules.
 | <a name="input_compliance_level"></a> [compliance\_level](#input\_compliance\_level) | Compliance level for patches approved by this rule. Valid values are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, and UNSPECIFIED | `string` | `"UNSPECIFIED"` | no |
 | <a name="input_cutoff"></a> [cutoff](#input\_cutoff) | The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution. | `number` | `0` | no |
 | <a name="input_cutoff_behavior"></a> [cutoff\_behavior](#input\_cutoff\_behavior) | Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached. Valid values are CONTINUE\_TASK and CANCEL\_TASK. | `string` | `"CANCEL_TASK"` | no |
-| <a name="input_debian_patch_filter"></a> [debian\_patch\_filter](#input\_debian\_patch\_filter) | Patch filter for Debian operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Debian"<br>  ]<br>}</pre> | no |
+| <a name="input_debian_patch_filter"></a> [debian\_patch\_filter](#input\_debian\_patch\_filter) | Patch filter for Debian operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Debian"<br>  ],<br>  "SECTION": [<br>    "*"<br>  ]<br>}</pre> | no |
 | <a name="input_default_patch_filter"></a> [default\_patch\_filter](#input\_default\_patch\_filter) | Patch filter for other operating systems | `map(list(string))` | <pre>{<br>  "CLASSIFICATION": [<br>    "Security"<br>  ],<br>  "PRODUCT": [<br>    "*"<br>  ],<br>  "SEVERITY": [<br>    "Critical"<br>  ]<br>}</pre> | no |
 | <a name="input_duration"></a> [duration](#input\_duration) | The duration of the Maintenance Window in hours. | `number` | `4` | no |
 | <a name="input_email_notification"></a> [email\_notification](#input\_email\_notification) | Email address for notifications | `string` | `""` | no |
@@ -91,7 +91,7 @@ No modules.
 | <a name="input_stop_instance"></a> [stop\_instance](#input\_stop\_instance) | Specifies whether the schedule is enabled or disabled. One of: ENABLED (default), DISABLED. | `string` | `"ENABLED"` | no |
 | <a name="input_task_arn"></a> [task\_arn](#input\_task\_arn) | The ARN of the task to execute. | `string` | `"AWS-RunPatchBaseline"` | no |
 | <a name="input_task_type"></a> [task\_type](#input\_task\_type) | The type of task being registered. | `string` | `"RUN_COMMAND"` | no |
-| <a name="input_ubuntu_patch_filter"></a> [ubuntu\_patch\_filter](#input\_ubuntu\_patch\_filter) | Patch filter for Ubuntu operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Ubuntu"<br>  ]<br>}</pre> | no |
+| <a name="input_ubuntu_patch_filter"></a> [ubuntu\_patch\_filter](#input\_ubuntu\_patch\_filter) | Patch filter for Ubuntu operating system | `map(list(string))` | <pre>{<br>  "PRIORITY": [<br>    "high"<br>  ],<br>  "PRODUCT": [<br>    "Ubuntu"<br>  ],<br>  "SECTION": [<br>    "*"<br>  ]<br>}</pre> | no |
 | <a name="input_windows_patch_filter"></a> [windows\_patch\_filter](#input\_windows\_patch\_filter) | Patch filter for Windows operating system | `map(list(string))` | <pre>{<br>  "CLASSIFICATION": [<br>    "CriticalUpdates",<br>    "SecurityUpdates"<br>  ],<br>  "MSRC_SEVERITY": [<br>    "Critical",<br>    "Important"<br>  ],<br>  "PRODUCT": [<br>    "WindowsServer2019",<br>    "WindowsServer2016"<br>  ]<br>}</pre> | no |
 
 ## Outputs
