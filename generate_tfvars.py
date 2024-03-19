@@ -42,16 +42,20 @@ def generate_tfvars(input_csv, output_tfvars):
                 }
             elif row['operating_system'].upper() == 'DEBIAN':
                 product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                section_values = [f'"{val.strip()}"' for val in row["SECTION"].split(",")]
                 priority_values = [f'"{val.strip()}"' for val in row["PRIORITY"].split(",")]
                 mw_data[mw_name]['debian_patch_filter'] = {
                     'PRODUCT': f'[{", ".join(product_values)}]',
+                    'SECTION': f'[{", ".join(section_values)}]',
                     'PRIORITY': f'[{", ".join(priority_values)}]'
                 }
             elif row['operating_system'].upper() == 'UBUNTU':
                 product_values = [f'"{val.strip()}"' for val in row["PRODUCT"].split(",")]
+                section_values = [f'"{val.strip()}"' for val in row["SECTION"].split(",")]
                 priority_values = [f'"{val.strip()}"' for val in row["PRIORITY"].split(",")]                
                 mw_data[mw_name]['ubuntu_patch_filter'] = {
                     'PRODUCT': f'[{", ".join(product_values)}]',
+                    'SECTION': f'[{", ".join(section_values)}]',
                     'PRIORITY': f'[{", ".join(priority_values)}]'
                 }
             elif row['operating_system'].upper() == 'MACOS':
