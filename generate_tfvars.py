@@ -7,8 +7,12 @@ def generate_tfvars(input_csv, output_tfvars):
         mw_data = {}
         for row in reader:
             mw_name = row['mw_name']
-            approved_patches = [f'"{val.strip()}"' for val in row["approved_patches"].split(",")]
-            rejected_patches = [f'"{val.strip()}"' for val in row["rejected_patches"].split(",")]
+            approved_patches = []
+            if row["approved_patches"]:
+                approved_patches = [f'"{val.strip()}"' for val in row["approved_patches"].split(",")]
+            rejected_patches = []
+            if row["rejected_patches"]:
+                rejected_patches = [f'"{val.strip()}"' for val in row["rejected_patches"].split(",")]
             mw_data[mw_name] = {
                 'mw_name': f'"{mw_name}"',
                 'enabled': row['enabled'].lower(),
@@ -25,8 +29,8 @@ def generate_tfvars(input_csv, output_tfvars):
                 'operation': f'["{row["operation"]}"]',
                 'reboot_option': f'["{row["reboot_option"]}"]',
                 'operating_system': f'"{row["operating_system"].upper()}"',
-                'approved_patches': f'[{", ".join(approved_patches)}]',
-                'rejected_patches': f'[{", ".join(rejected_patches)}]',
+                'approved_patches': f'[{", ".join(approved_patches)}]' if approved_patches else '[]',
+                'rejected_patches': f'[{", ".join(rejected_patches)}]' if rejected_patches else '[]',
                 'compliance_level': f'"{row["compliance_level"].upper()}"',
                 'enable_non_security': row['enable_non_security'].lower(),
                 'approve_after_days': row['approve_after_days'],
