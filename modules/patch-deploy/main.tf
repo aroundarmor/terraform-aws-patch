@@ -154,7 +154,7 @@ resource "aws_ssm_maintenance_window_task" "example_task" {
 ####################################################################
 # Create patch baseline
 resource "aws_ssm_patch_baseline" "example" {
-  name                    = "Ollion-Patching-${var.operating_system}"
+  name                    = "Ollion-Patching-${var.operating_system}-${var.patch_group_tag_value}"
   description             = "This is a patch baseline for tag:${var.patch_group_tag} in ${var.operating_system}"
   operating_system        = var.operating_system
   approved_patches        = var.approved_patches
