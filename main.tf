@@ -26,6 +26,7 @@ module "patch_deployments" {
   enable_non_security        = try(each.value.enable_non_security, null)
   windows_patch_filter       = try(each.value.windows_patch_filter, null)
   debian_patch_filter        = try(each.value.debian_patch_filter, null)
+  ubuntu_patch_filter        = try(each.value.ubuntu_patch_filter, null)
   macos_patch_filter         = try(each.value.macos_patch_filter, null)
   default_patch_filter       = try(each.value.default_patch_filter, null)
   start_instance             = try(each.value.start_instance, null)
