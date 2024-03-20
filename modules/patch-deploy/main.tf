@@ -182,7 +182,7 @@ resource "aws_ssm_patch_baseline" "example" {
   }
 
   dynamic "approval_rule" {
-    for_each = var.operating_system == "DEBIAN" || var.operating_system == "UBUNTU" ? [1] : []
+    for_each = var.operating_system == "DEBIAN" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -192,6 +192,26 @@ resource "aws_ssm_patch_baseline" "example" {
 
       dynamic "patch_filter" {
         for_each = var.debian_patch_filter
+
+        content {
+          key    = patch_filter.key
+          values = patch_filter.value
+        }
+      }
+    }
+  }
+
+  dynamic "approval_rule" {
+    for_each = var.operating_system == "UBUNTU" ? [1] : []
+
+    content {
+      approve_after_days  = var.approve_after_days
+      approve_until_date  = var.approve_until_date
+      compliance_level    = var.compliance_level
+      enable_non_security = var.enable_non_security
+
+      dynamic "patch_filter" {
+        for_each = var.ubuntu_patch_filter
 
         content {
           key    = patch_filter.key
