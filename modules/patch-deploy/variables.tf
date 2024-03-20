@@ -248,9 +248,9 @@ variable "debian_patch_filter" {
   description = "Patch filter for Debian operating system"
   type        = map(list(string))
   default = {
-    PRODUCT  = ["Debian"],
+    PRODUCT  = ["*"],
     SECTION  = ["*"],
-    PRIORITY = ["high"]
+    PRIORITY = ["*"]
   }
 }
 
@@ -258,9 +258,9 @@ variable "ubuntu_patch_filter" {
   description = "Patch filter for Ubuntu operating system"
   type        = map(list(string))
   default = {
-    PRODUCT  = ["Ubuntu"],
+    PRODUCT  = ["*"],
     SECTION  = ["*"],
-    PRIORITY = ["high"]
+    PRIORITY = ["*"]
   }
 }
 
