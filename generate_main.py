@@ -36,6 +36,7 @@ module "patch_deployment_{alias}" {{
   windows_patch_filter       = try(each.value.windows_patch_filter, null)
   debian_patch_filter        = try(each.value.debian_patch_filter, null)
   macos_patch_filter         = try(each.value.macos_patch_filter, null)
+  ubuntu_patch_filter        = try(each.value.ubuntu_patch_filter, null)
   default_patch_filter       = try(each.value.default_patch_filter, null)
   start_instance             = try(each.value.start_instance, null)
   schedule_start             = try(each.value.schedule_start, null)
