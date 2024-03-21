@@ -28,6 +28,7 @@ def generate_tfvars(input_csv, output_tfvars):
                 'patch_group_tag_value': f'"{row["patch_group_tag_value"]}"',
                 'operation': f'["{row["operation"]}"]',
                 'reboot_option': f'["{row["reboot_option"]}"]',
+                'baseline': row['baseline'].lower(),
                 'operating_system': f'"{row["operating_system"].upper()}"',
                 'approved_patches': f'[{", ".join(approved_patches)}]' if approved_patches else '[]',
                 'rejected_patches': f'[{", ".join(rejected_patches)}]' if rejected_patches else '[]',
