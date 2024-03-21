@@ -10,7 +10,7 @@ on:
       aws-region:
         description: 'AWS Region'
         required: false
-        default: 'us-east-1'
+        # default: 'us-east-1'
       csv-file-path:
         description: 'Path of the desired .csv file under csv-files directory'
         required: true
