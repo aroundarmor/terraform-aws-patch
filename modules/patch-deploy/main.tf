@@ -154,15 +154,17 @@ resource "aws_ssm_maintenance_window_task" "example_task" {
 ####################################################################
 # Create patch baseline
 resource "aws_ssm_patch_baseline" "example" {
-  name                    = "Ollion-Patching-${var.operating_system}-${var.patch_group_tag_value}"
-  description             = "This is a patch baseline for tag:${var.patch_group_tag} in ${var.operating_system}"
-  operating_system        = var.operating_system
-  approved_patches        = var.approved_patches
-  rejected_patches_action = var.rejected_patches_action
-  rejected_patches        = var.rejected_patches
+  count = var.baseline ? 1 : 0
+
+  name                    = var.baseline ? "Ollion-Patching-${var.operating_system}-${var.patch_group_tag_value}" : null
+  description             = var.baseline ? "This is a patch baseline for tag:${var.patch_group_tag} in ${var.operating_system}" : null
+  operating_system        = var.baseline ? var.operating_system : null
+  approved_patches        = var.baseline ? var.approved_patches : null
+  rejected_patches_action = var.baseline ? var.rejected_patches_action : null
+  rejected_patches        = var.baseline ? var.rejected_patches : null
 
   dynamic "approval_rule" {
-    for_each = var.operating_system == "WINDOWS" ? [1] : []
+    for_each = var.baseline && var.operating_system == "WINDOWS" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -182,7 +184,7 @@ resource "aws_ssm_patch_baseline" "example" {
   }
 
   dynamic "approval_rule" {
-    for_each = var.operating_system == "DEBIAN" ? [1] : []
+    for_each = var.baseline && var.operating_system == "DEBIAN" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -202,7 +204,7 @@ resource "aws_ssm_patch_baseline" "example" {
   }
 
   dynamic "approval_rule" {
-    for_each = var.operating_system == "UBUNTU" ? [1] : []
+    for_each = var.baseline && var.operating_system == "UBUNTU" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -222,7 +224,7 @@ resource "aws_ssm_patch_baseline" "example" {
   }
 
   dynamic "approval_rule" {
-    for_each = var.operating_system == "MACOS" ? [1] : []
+    for_each = var.baseline && var.operating_system == "MACOS" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -242,7 +244,7 @@ resource "aws_ssm_patch_baseline" "example" {
   }
 
   dynamic "approval_rule" {
-    for_each = var.operating_system != "WINDOWS" && var.operating_system != "DEBIAN" && var.operating_system != "UBUNTU" && var.operating_system != "MACOS" ? [1] : []
+    for_each = var.baseline && var.operating_system != "WINDOWS" && var.operating_system != "DEBIAN" && var.operating_system != "UBUNTU" && var.operating_system != "MACOS" ? [1] : []
 
     content {
       approve_after_days  = var.approve_after_days
@@ -267,9 +269,19 @@ resource "aws_ssm_patch_baseline" "example" {
 ####################################################################
 # Create patch group
 resource "aws_ssm_patch_group" "example" {
-  baseline_id = aws_ssm_patch_baseline.example.id
+  count       = var.baseline ? 1 : 0
+  baseline_id = var.baseline ? aws_ssm_patch_baseline.example[count.index].id : null
   patch_group = var.patch_group_tag_value # Using maintenance window name as patch group name, adjust if needed
 }
+
+# Conditional resource to enforce dependency
+resource "null_resource" "baseline_dependency" {
+  count     = var.baseline ? 1 : 0
+  depends_on = [aws_ssm_patch_baseline.example]
+}
+
+
+
 
 ####################################################################
 ####################################################################
