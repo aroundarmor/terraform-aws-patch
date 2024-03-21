@@ -57,7 +57,7 @@ jobs:
       - name: Update Backend Configuration
         run: |
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }}\"/" backend.tf
-          sed -i "s/^ *region *=.*/region = \"${{ github.event.inputs.aws-region }}\"/" backend.tf
+          sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
 
       - name: Build terraform.tfvars
         run: |
