@@ -186,6 +186,12 @@ variable "notification_events" {
 ####################################################################
 ####################################################################
 # variables for patch baseline
+variable "baseline" {
+  type    = bool
+  default = true
+}
+
+
 variable "operating_system" {
   description = "Operating system the patch baseline applies to. Valid values are ALMA_LINUX, AMAZON_LINUX, AMAZON_LINUX_2, AMAZON_LINUX_2022, AMAZON_LINUX_2023, CENTOS, DEBIAN, MACOS, ORACLE_LINUX, RASPBIAN, REDHAT_ENTERPRISE_LINUX, ROCKY_LINUX, SUSE, UBUNTU, and WINDOWS"
   type        = string
