@@ -27,6 +27,7 @@ module "patch_deployment_{alias}" {{
   patch_group_tag_value      = try(each.value.patch_group_tag_value, null)
   operation                  = try(each.value.operation, null)
   reboot_option              = try(each.value.reboot_option, null)
+  baseline                   = try(each.value.baseline, null)
   operating_system           = try(each.value.operating_system, null)
   approved_patches           = try(each.value.approved_patches, null)
   rejected_patches           = try(each.value.rejected_patches, null)
