@@ -65,12 +65,14 @@ jobs:
 
       - name: Create or Check S3 Bucket Existence
         run: |
-          if aws s3 ls s3://ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
+          if aws s3 ls s3://ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} 2>/dev/null; then
             echo "Bucket already exists."
           else
             echo "Bucket does not exist. Creating..."
-            aws s3api create-bucket --bucket ollion-patching-terraform-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
+            aws s3api create-bucket --bucket ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
+            aws s3api put-bucket-versioning --bucket ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --versioning-configuration Status=Enabled
           fi
+          
       - name: Update Backend and Provider Configuration
         run: |
           sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
