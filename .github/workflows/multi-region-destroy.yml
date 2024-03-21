@@ -49,7 +49,7 @@ jobs:
             echo "Bucket already exists."
           else
             echo "Bucket does not exist. Creating..."
-            aws s3api create-bucket --bucket ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${{ github.event.inputs.aws-region }}
+            aws s3api create-bucket --bucket ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --region ${AWS_REGION}
             aws s3api put-bucket-versioning --bucket ollion-state-in-${{ github.event.inputs.aws-region }}-and-${{ github.event.inputs.aws-account-id }} --versioning-configuration Status=Enabled
           fi
           
@@ -72,7 +72,7 @@ jobs:
           python3 generate_main.py ./csv-files/${{ github.event.inputs.csv-file-path }} main.tf
           
       - name: Set AWS Region
-        run: aws configure set region ${{ github.event.inputs.aws-region }}
+        run: aws configure set region ${AWS_REGION}
 
       - name: Terraform Init
         run: terraform init
