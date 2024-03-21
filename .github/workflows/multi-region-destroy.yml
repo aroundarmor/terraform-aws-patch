@@ -56,7 +56,7 @@ jobs:
       
       - name: Update Backend Configuration
         run: |
-          sed -i "s/^ *bucket *=.*/bucket = \"ollion-patching-terraform-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
+          sed -i "s/^ *bucket *=.*/bucket = \"ollion-state-in-${AWS_REGION}-and-${AWS_ACCOUNT_ID}\"/" backend.tf
           sed -i "s/^ *region *=.*/region = \"${AWS_REGION}\"/" backend.tf
 
       - name: Build terraform.tfvars
